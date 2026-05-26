@@ -1,231 +1,43 @@
 {% extends "base.html" %}
-{% block title %}Sign In{% endblock %}
-
-{% block extra_css %}
-.auth-wrapper {
-    width: 100%;
-    max-width: 420px;
-}
-
-.auth-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 40px;
-    box-shadow: var(--shadow-card), 0 0 60px rgba(139,92,246,0.07);
-}
-
-.auth-brand {
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.auth-logo {
-    width: 52px; height: 52px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    border-radius: var(--radius-md);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    color: #fff;
-    margin-bottom: 14px;
-}
-
-.auth-title {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-}
-
-.auth-subtitle {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin-top: 4px;
-}
-
-.form-group { margin-bottom: 16px; }
-
-.input-icon-wrapper {
-    position: relative;
-}
-
-.input-icon-wrapper .af-input {
-    padding-left: 40px;
-}
-
-.input-icon-wrapper .input-icon {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    pointer-events: none;
-}
-
-/* Password toggle button */
-.pw-toggle {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 0.95rem;
-    padding: 0;
-    transition: var(--transition);
-}
-.pw-toggle:hover { color: var(--accent); }
-
-.input-icon-wrapper .af-input.has-toggle { padding-right: 40px; }
-
-.submit-btn {
-    width: 100%;
-    padding: 12px;
-    margin-top: 8px;
-    font-size: 0.95rem;
-    justify-content: center;
-    border-radius: var(--radius-md);
-}
-
-.auth-footer {
-    text-align: center;
-    margin-top: 24px;
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.auth-footer a {
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.auth-footer a:hover { text-decoration: underline; }
-
-/* Feature pills shown below the card */
-.feature-pills {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 28px;
-}
-
-.feature-pill {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 5px 12px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.feature-pill i { color: var(--accent); font-size: 0.8rem; }
-{% endblock %}
+{% block title %}Login{% endblock %}
 
 {% block guest_content %}
-<div class="auth-wrapper">
-
-    <div class="auth-card">
-
-        <!-- Brand header -->
-        <div class="auth-brand">
-            <div class="auth-logo"><i class="bi bi-cpu"></i></div>
-            <div class="auth-title">Welcome back</div>
-            <div class="auth-subtitle">Sign in to AFIMAS</div>
-        </div>
-
-        <!-- Login Form -->
-        <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
-
-            <!-- Email -->
-            <div class="form-group">
-                <label class="af-label" for="email">Email Address</label>
-                <div class="input-icon-wrapper">
-                    <i class="bi bi-envelope input-icon"></i>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        class="af-input"
-                        placeholder="you@example.com"
-                        value="{{ email | default('') }}"
-                        required
-                        autofocus
-                        autocomplete="email"
-                    />
-                </div>
-            </div>
-
-            <!-- Password -->
-            <div class="form-group">
-                <label class="af-label" for="password">Password</label>
-                <div class="input-icon-wrapper">
-                    <i class="bi bi-lock input-icon"></i>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        class="af-input has-toggle"
-                        placeholder="Your password"
-                        required
-                        autocomplete="current-password"
-                    />
-                    <!-- Show/hide password toggle -->
-                    <button type="button" class="pw-toggle" id="pwToggle"
-                            onclick="togglePassword()"
-                            title="Show/hide password">
-                        <i class="bi bi-eye" id="pwIcon"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-af-primary submit-btn">
-                <i class="bi bi-box-arrow-in-right"></i> Sign In
-            </button>
-
-        </form>
-
-        <div class="auth-footer">
-            Don't have an account?
-            <a href="{{ url_for('auth.signup') }}">Create one</a>
-        </div>
-
+<div class="w-full max-w-md rounded-[28px] border border-af-border bg-white/90 p-8 shadow-af-card backdrop-blur-xl">
+    <div class="mb-7 text-center">
+        <a href="{{ url_for('index') }}" class="inline-flex items-center justify-center gap-3 font-display text-3xl font-extrabold text-af-text no-underline">
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-af-accent to-af-accent-2 text-base text-white">
+                <i class="bi bi-cpu"></i>
+            </span>
+            AFIMAS
+        </a>
+        <p class="mt-3 text-sm text-af-muted">Sign in to your face and mood workspace.</p>
     </div>
 
-    <!-- Feature pills shown under card -->
-    <div class="feature-pills">
-        <div class="feature-pill">
-            <i class="bi bi-shield-lock"></i> Secure Login
+    <form method="POST" action="{{ url_for('auth.login') }}" novalidate class="space-y-4">
+        <div>
+            <label for="email" class="af-label">Email</label>
+            <div class="relative">
+                <i class="bi bi-envelope absolute left-4 top-1/2 -translate-y-1/2 text-af-muted"></i>
+                <input id="email" name="email" type="email" value="{{ email or '' }}" placeholder="you@example.com" class="af-input pl-11" required>
+            </div>
         </div>
-        <div class="feature-pill">
-            <i class="bi bi-person-bounding-box"></i> Face Recognition
-        </div>
-        <div class="feature-pill">
-            <i class="bi bi-emoji-smile"></i> Mood Detection
-        </div>
-    </div>
 
+        <div>
+            <label for="password" class="af-label">Password</label>
+            <div class="relative">
+                <i class="bi bi-lock absolute left-4 top-1/2 -translate-y-1/2 text-af-muted"></i>
+                <input id="password" name="password" type="password" placeholder="Enter your password" class="af-input pl-11" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-af-primary w-full">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+        </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-af-muted">
+        New here?
+        <a href="{{ url_for('auth.signup') }}" class="font-semibold text-af-accent no-underline">Create an account</a>
+    </p>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    function togglePassword() {
-        const input  = document.getElementById('password');
-        const icon   = document.getElementById('pwIcon');
-        const isHidden = input.type === 'password';
-        input.type   = isHidden ? 'text' : 'password';
-        icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
-    }
-</script>
 {% endblock %}

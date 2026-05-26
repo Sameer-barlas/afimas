@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@source "../../templates/**/*.html";
+@source "../js/**/*.js";
+
+@theme {
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+
+  --color-af-base: #f6f3ff;
+  --color-af-surface: #ffffff;
+  --color-af-card: #ffffff;
+  --color-af-card-hover: #f4f0ff;
+  --color-af-border: rgba(99, 102, 241, 0.16);
+  --color-af-border-accent: rgba(139, 92, 246, 0.34);
+
+  --color-af-accent: #8b5cf6;
+  --color-af-accent-2: #2563eb;
+  --color-af-accent-3: #06b6d4;
+  --color-af-warn: #f59e0b;
+  --color-af-danger: #ef4444;
+
+  --color-af-text: #0f1028;
+  --color-af-secondary: #334155;
+  --color-af-muted: #718096;
+
+  --shadow-af-card: 0 20px 50px rgba(64, 44, 128, 0.10);
+  --shadow-af-glow: 0 18px 42px rgba(139, 92, 246, 0.16);
+}
+
+@layer base {
+  :root {
+    --bg-base: #f6f3ff;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f4f0ff;
+    --border: rgba(99,102,241,0.16);
+    --border-accent: rgba(139,92,246,0.34);
+    --accent: #8b5cf6;
+    --accent-glow: rgba(139,92,246,0.12);
+    --accent-2: #2563eb;
+    --accent-3: #06b6d4;
+    --accent-warn: #f59e0b;
+    --accent-danger: #ef4444;
+    --text-primary: #0f1028;
+    --text-secondary: #334155;
+    --text-muted: #718096;
+    --font-display: "Syne", sans-serif;
+    --font-body: "DM Sans", sans-serif;
+    --radius-sm: 6px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 30px;
+    --shadow-card: 0 20px 50px rgba(64,44,128,0.10);
+    --shadow-glow: 0 18px 42px rgba(139,92,246,0.16);
+    --transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-af-base font-body text-af-text antialiased;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(139,92,246,0.16), transparent 28%),
+      radial-gradient(circle at 88% 0%, rgba(37,99,235,0.12), transparent 26%),
+      linear-gradient(180deg, #fbfaff 0%, #f6f3ff 45%, #eef5ff 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  ::selection {
+    background: rgba(139, 92, 246, 0.28);
+    color: #0f1028;
+  }
+}
+
+@layer components {
+  .af-btn-primary,
+  .btn-af-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border-0 bg-gradient-to-br from-af-accent to-af-accent-2 px-5 py-2.5 text-sm font-medium text-white no-underline transition hover:-translate-y-0.5 hover:text-white hover:shadow-af-glow;
+  }
+
+  .af-btn-secondary,
+  .btn-af-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-af-border bg-white/55 px-5 py-2.5 text-sm font-medium text-af-secondary no-underline transition hover:-translate-y-0.5 hover:border-af-border-accent hover:bg-white hover:text-af-accent;
+  }
+
+  .af-btn-danger,
+  .btn-af-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-red-300/40 bg-red-500/10 px-5 py-2.5 text-sm font-medium text-red-500 no-underline transition hover:bg-red-500/15;
+  }
+
+  .af-card {
+    @apply rounded-[22px] border border-af-border bg-white p-6 shadow-af-card transition hover:border-af-border-accent hover:shadow-af-glow;
+  }
+
+  .af-card-title {
+    @apply mb-4 flex items-center gap-2 font-display text-base font-semibold text-af-text;
+  }
+
+  .page-header {
+    @apply mb-7 border-b border-af-border pb-5;
+  }
+
+  .page-title {
+    @apply font-display text-3xl font-bold text-af-text;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-af-secondary;
+  }
+
+  .af-input {
+    @apply w-full rounded-2xl border border-af-border bg-af-base px-3.5 py-3 text-sm text-af-text outline-none transition placeholder:text-af-muted focus:border-af-accent focus:ring-4 focus:ring-af-accent/10;
+  }
+
+  .af-label {
+    @apply mb-1.5 block text-sm font-medium text-af-secondary;
+  }
+
+  .af-table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .af-table th {
+    @apply border-b border-af-border px-3.5 py-2.5 text-left text-xs font-medium uppercase tracking-[0.1em] text-af-muted;
+  }
+
+  .af-table td {
+    @apply border-b border-af-border px-3.5 py-3 align-middle text-af-secondary;
+  }
+
+  .badge-af {
+    @apply rounded-full px-2.5 py-1 text-xs font-medium tracking-wide;
+  }
+
+  .empty-state {
+    @apply px-5 py-10 text-center text-af-muted;
+  }
+
+  .main-content,
+  .dashboard-shell,
+  .activity-grid,
+  .feature-grid,
+  .metric-grid,
+  .charts-grid,
+  .form-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .af-card,
+  .page-header,
+  .mood-result,
+  .history-card,
+  .result-hero,
+  .webcam-panel,
+  .drop-zone,
+  .chart-wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  @media (max-width: 1024px) {
+    div[style*="grid-template-columns: 1fr 280px"],
+    div[style*="grid-template-columns: 1fr 300px"],
+    div[style*="grid-template-columns: 1fr 340px"] {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-title {
+      font-size: 1.6rem;
+      line-height: 1.2;
+    }
+
+    .btn-af-primary,
+    .btn-af-secondary,
+    .btn-af-danger {
+      width: 100%;
+    }
+  }
+}

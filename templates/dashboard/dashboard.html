@@ -1,608 +1,226 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 
-{% block extra_css %}
-.dashboard-shell {
-    width: min(1220px, 100%);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 34px;
-}
-
-.dashboard-hero {
-    min-height: 360px;
-    border-radius: 34px;
-    padding: 42px;
-    position: relative;
-    overflow: hidden;
-    background:
-        linear-gradient(135deg, rgba(139,92,246,0.17), rgba(37,99,235,0.10) 48%, rgba(6,182,212,0.12)),
-        rgba(255,255,255,0.88);
-    border: 1px solid rgba(139,92,246,0.22);
-    box-shadow: var(--shadow-card), var(--shadow-glow);
-}
-
-.dashboard-hero::after {
-    content: "";
-    position: absolute;
-    inset: 24px;
-    border-radius: 28px;
-    border: 1px solid rgba(255,255,255,0.65);
-    pointer-events: none;
-}
-
-.hero-grid {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 42px;
-    align-items: center;
-}
-
-.hero-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 100px;
-    color: var(--accent);
-    background: rgba(255,255,255,0.76);
-    border: 1px solid var(--border-accent);
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-}
-
-.hero-title {
-    font-family: var(--font-display);
-    color: var(--text-primary);
-    font-size: clamp(2.35rem, 5vw, 5rem);
-    line-height: 1;
-    font-weight: 800;
-    letter-spacing: 0;
-    max-width: 760px;
-    margin-bottom: 18px;
-}
-
-.hero-copy {
-    color: var(--text-secondary);
-    font-size: 1.05rem;
-    line-height: 1.8;
-    max-width: 720px;
-    margin-bottom: 28px;
-}
-
-.hero-actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-.profile-card {
-    background: rgba(255,255,255,0.82);
-    border: 1px solid var(--border);
-    border-radius: 28px;
-    padding: 24px;
-    box-shadow: 0 24px 50px rgba(64,44,128,0.10);
-}
-
-.profile-avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-size: 1.7rem;
-    font-weight: 800;
-    margin-bottom: 16px;
-}
-
-.profile-name {
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.profile-email {
-    color: var(--text-muted);
-    font-size: 0.88rem;
-    word-break: break-word;
-    margin-top: 3px;
-}
-
-.profile-list {
-    display: grid;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.profile-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 11px 0;
-    border-top: 1px solid var(--border);
-}
-
-.profile-row span:first-child {
-    color: var(--text-muted);
-    font-size: 0.82rem;
-}
-
-.profile-row span:last-child {
-    color: var(--text-primary);
-    font-weight: 800;
-    font-size: 0.92rem;
-}
-
-.metric-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
-}
-
-.metric-card {
-    min-height: 168px;
-    background: rgba(255,255,255,0.86);
-    border: 1px solid var(--border);
-    border-radius: 28px;
-    padding: 26px;
-    box-shadow: var(--shadow-card);
-    position: relative;
-    overflow: hidden;
-}
-
-.metric-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
-}
-
-.metric-label {
-    color: var(--text-muted);
-    font-size: 0.74rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.metric-value {
-    font-family: var(--font-display);
-    color: var(--text-primary);
-    font-size: 2.05rem;
-    line-height: 1.1;
-    font-weight: 800;
-    margin-top: 14px;
-}
-
-.metric-note {
-    color: var(--text-secondary);
-    font-size: 0.86rem;
-    margin-top: 8px;
-}
-
-.section-heading {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 18px;
-    margin-bottom: 18px;
-}
-
-.section-heading h2 {
-    font-family: var(--font-display);
-    color: var(--text-primary);
-    font-size: 1.75rem;
-    font-weight: 800;
-    margin: 0;
-}
-
-.section-heading p {
-    color: var(--text-muted);
-    margin: 5px 0 0;
-    font-size: 0.96rem;
-}
-
-.feature-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
-}
-
-.feature-card {
-    min-height: 278px;
-    background: rgba(255,255,255,0.88);
-    border: 1px solid var(--border);
-    border-radius: 30px;
-    padding: 30px;
-    box-shadow: var(--shadow-card);
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    transition: var(--transition);
-}
-
-a.feature-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--border-accent);
-    box-shadow: var(--shadow-card), var(--shadow-glow);
-}
-
-.feature-icon {
-    width: 58px;
-    height: 58px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    font-size: 1.55rem;
-    margin-bottom: 22px;
-}
-
-.feature-status {
-    align-self: flex-start;
-    padding: 5px 11px;
-    border-radius: 100px;
-    color: var(--accent);
-    background: var(--accent-glow);
-    border: 1px solid var(--border-accent);
-    font-size: 0.72rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 16px;
-}
-
-.feature-status.soon {
-    color: #b45309;
-    background: rgba(245,158,11,0.12);
-    border-color: rgba(245,158,11,0.26);
-}
-
-.feature-card h3 {
-    font-family: var(--font-display);
-    color: var(--text-primary);
-    font-size: 1.35rem;
-    font-weight: 800;
-    margin-bottom: 10px;
-}
-
-.feature-card p {
-    color: var(--text-secondary);
-    line-height: 1.72;
-    margin-bottom: 24px;
-}
-
-.feature-footer {
-    margin-top: auto;
-    color: var(--text-muted);
-    font-size: 0.86rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.activity-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 22px;
-}
-
-.activity-panel {
-    background: rgba(255,255,255,0.88);
-    border: 1px solid var(--border);
-    border-radius: 30px;
-    padding: 28px;
-    box-shadow: var(--shadow-card);
-}
-
-.activity-panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    margin-bottom: 14px;
-}
-
-.activity-panel-title {
-    font-family: var(--font-display);
-    color: var(--text-primary);
-    font-weight: 800;
-    font-size: 1.2rem;
-}
-
-.activity-link {
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: 800;
-    font-size: 0.86rem;
-}
-
-.activity-item {
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 0;
-    border-top: 1px solid var(--border);
-}
-
-.activity-dot {
-    width: 42px;
-    height: 42px;
-    border-radius: 16px;
-    background: var(--accent-glow);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.activity-dot::before {
-    content: "";
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: var(--accent);
-}
-
-.activity-dot.positive::before,
-.activity-dot.matched::before {
-    background: #06b6d4;
-}
-
-.activity-dot.negative::before,
-.activity-dot.unknown::before,
-.activity-dot.error::before {
-    background: #ef4444;
-}
-
-.activity-title {
-    color: var(--text-primary);
-    font-weight: 800;
-    text-transform: capitalize;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.activity-time {
-    color: var(--text-muted);
-    font-size: 0.84rem;
-    margin-top: 3px;
-}
-
-.empty-state {
-    background: rgba(139,92,246,0.05);
-    border: 1px dashed var(--border-accent);
-    border-radius: 24px;
-}
-
-@media (max-width: 1120px) {
-    .hero-grid,
-    .metric-grid,
-    .feature-grid,
-    .activity-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 620px) {
-    .dashboard-hero,
-    .feature-card,
-    .activity-panel,
-    .metric-card {
-        padding: 24px;
-    }
-}
-{% endblock %}
-
 {% block content %}
-<div class="dashboard-shell">
+<div class="space-y-12 overflow-x-clip">
+    <section class="overflow-hidden rounded-[30px] border border-af-border-accent/50 bg-gradient-to-br from-af-accent/10 via-white/35 to-af-accent-3/10 p-4 shadow-af-card md:p-5">
+        <div class="rounded-[26px] border border-white/70 p-5 md:p-8 2xl:p-10">
+            <div class="grid min-w-0 items-center gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
+                <div class="min-w-0">
+                    <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-af-border-accent bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] text-af-accent">
+                        <i class="bi bi-stars"></i>
+                        Your AI control center
+                    </div>
 
-    <section class="dashboard-hero">
-        <div class="hero-grid">
-            <div>
-                <div class="hero-kicker">
-                    <i class="bi bi-stars"></i>
-                    Your AI control center
+                    <h1 class="mb-6 max-w-full break-words font-display text-[clamp(2.7rem,6.4vw,5.4rem)] font-extrabold leading-[0.96] text-af-text 2xl:text-[clamp(3.2rem,5.8vw,6rem)]">
+                        Welcome back, {{ user.name }}
+                    </h1>
+                    <p class="mb-8 max-w-4xl text-lg leading-8 text-af-secondary">
+                        Use AFIMAS to identify faces, analyze mood, review insights, and prepare for upcoming age and image-generation tools from one clear workspace.
+                    </p>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{{ url_for('mood.scan') }}" class="btn-af-primary">
+                            <i class="bi bi-emoji-smile"></i> Run Mood Scan
+                        </a>
+                        <a href="{{ url_for('face.recognize') }}" class="btn-af-secondary">
+                            <i class="bi bi-person-check"></i> Recognize Face
+                        </a>
+                        <a href="{{ url_for('dashboard.analytics') }}" class="btn-af-secondary">
+                            <i class="bi bi-bar-chart-line"></i> Open Analytics
+                        </a>
+                    </div>
                 </div>
-                <h1 class="hero-title">Welcome back, {{ user.name }}</h1>
-                <p class="hero-copy">
-                    Use AFIMAS to identify faces, analyze mood, review insights, and prepare for upcoming age and image-generation tools from one clear workspace.
-                </p>
-                <div class="hero-actions">
-                    <a href="{{ url_for('mood.scan') }}" class="btn-af-primary">
-                        <i class="bi bi-emoji-smile"></i> Run Mood Scan
-                    </a>
-                    <a href="{{ url_for('face.recognize') }}" class="btn-af-secondary">
-                        <i class="bi bi-person-check"></i> Recognize Face
-                    </a>
-                    <a href="{{ url_for('dashboard.analytics') }}" class="btn-af-secondary">
-                        <i class="bi bi-bar-chart-line"></i> Open Analytics
-                    </a>
-                </div>
+
+                <aside class="relative z-10 w-full max-w-[460px] justify-self-start rounded-[28px] bg-white/95 p-6 shadow-af-card md:p-8 2xl:justify-self-end">
+                    <div class="mb-7 grid h-24 w-24 place-items-center rounded-[28px] bg-gradient-to-br from-af-accent to-af-accent-2 font-display text-5xl font-extrabold text-white">
+                        {{ (user.name[:1] if user and user.name else 'U') | upper }}
+                    </div>
+                    <div class="font-display text-3xl font-extrabold leading-tight text-af-text">{{ user.name }}</div>
+                    <div class="mt-3 text-base text-af-muted">{{ user.email }}</div>
+
+                    <div class="mt-6 divide-y divide-af-border">
+                        <div class="flex items-center justify-between gap-4 py-4 text-af-muted">
+                            <span>Age</span>
+                            <span class="font-bold text-af-text">{{ user.age or 'Not set' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 py-4 text-af-muted">
+                            <span>Face status</span>
+                            <span class="font-bold text-af-text">{% if summary.face_registered %}Ready{% else %}Pending{% endif %}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 py-4 text-af-muted">
+                            <span>Member since</span>
+                            <span class="font-bold text-af-text">{{ user.created_at[:10] if user.created_at else 'Today' }}</span>
+                        </div>
+                    </div>
+                </aside>
             </div>
-
-            <aside class="profile-card">
-                <div class="profile-avatar">{{ (user.name[:1] if user and user.name else 'U') | upper }}</div>
-                <div class="profile-name">{{ user.name }}</div>
-                <div class="profile-email">{{ user.email }}</div>
-                <div class="profile-list">
-                    <div class="profile-row"><span>Age</span><span>{{ user.age or 'Not set' }}</span></div>
-                    <div class="profile-row"><span>Face status</span><span>{% if summary.face_registered %}Ready{% else %}Pending{% endif %}</span></div>
-                    <div class="profile-row"><span>Member since</span><span>{{ user.created_at[:10] if user.created_at else 'Today' }}</span></div>
-                </div>
-            </aside>
         </div>
     </section>
 
-    <section class="metric-grid">
-        <div class="metric-card">
-            <div class="metric-label">Mood scans</div>
-            <div class="metric-value">{{ summary.total_scans }}</div>
-            <div class="metric-note">Total saved emotion results</div>
+    <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="border-t-4 border-af-accent af-card">
+            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Mood scans</div>
+            <div class="mt-4 font-display text-5xl font-extrabold text-af-text">{{ summary.total_scans }}</div>
+            <div class="mt-2 text-sm text-af-muted">Total saved emotion results</div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Top mood</div>
-            <div class="metric-value" style="font-size:1.6rem;text-transform:capitalize;">{{ summary.most_common_mood }}</div>
-            <div class="metric-note">Most common detected emotion</div>
+        <div class="border-t-4 border-af-accent af-card">
+            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Top mood</div>
+            <div class="mt-4 font-display text-3xl font-extrabold capitalize text-af-text">{{ summary.most_common_mood }}</div>
+            <div class="mt-2 text-sm text-af-muted">Most common detected emotion</div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Face ID</div>
-            <div class="metric-value" style="font-size:1.6rem;">{% if summary.face_registered %}Active{% else %}Setup{% endif %}</div>
-            <div class="metric-note">Recognition encoding status</div>
+        <div class="border-t-4 border-af-accent-2 af-card">
+            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Face ID</div>
+            <div class="mt-4 font-display text-3xl font-extrabold text-af-text">{% if summary.face_registered %}Active{% else %}Setup{% endif %}</div>
+            <div class="mt-2 text-sm text-af-muted">Recognition encoding status</div>
         </div>
-        <div class="metric-card">
-            <div class="metric-label">Recognition logs</div>
-            <div class="metric-value">{{ summary.recent_recognitions | length }}</div>
-            <div class="metric-note">Latest attempts shown below</div>
+        <div class="border-t-4 border-af-accent-3 af-card">
+            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Recognition logs</div>
+            <div class="mt-4 font-display text-5xl font-extrabold text-af-text">{{ summary.recent_recognitions | length }}</div>
+            <div class="mt-2 text-sm text-af-muted">Latest attempts shown below</div>
         </div>
     </section>
 
-    <section>
-        <div class="section-heading">
-            <div>
-                <h2>Available Features</h2>
-                <p>These tools are connected to real routes and ready to use.</p>
-            </div>
+    <section class="space-y-5">
+        <div>
+            <h2 class="font-display text-3xl font-extrabold text-af-text">Available Features</h2>
+            <p class="mt-1 text-af-muted">These tools are connected to real routes and ready to use.</p>
         </div>
-        <div class="feature-grid">
-            <a href="{{ url_for('face.register_face') }}" class="feature-card">
-                <div class="feature-icon"><i class="bi bi-person-bounding-box"></i></div>
-                <div class="feature-status">Live</div>
-                <h3>Face Registration</h3>
-                <p>Add your face encoding or improve recognition accuracy by registering another clear image.</p>
-                <div class="feature-footer"><span>{% if summary.face_registered %}Encoding available{% else %}Setup required{% endif %}</span><i class="bi bi-arrow-right"></i></div>
+
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <a href="{{ url_for('face.register_face') }}" class="group af-card no-underline">
+                <div class="mb-5 flex items-start justify-between gap-4">
+                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi bi-person-bounding-box"></i></div>
+                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">Live</span>
+                </div>
+                <h3 class="font-display text-2xl font-extrabold text-af-text">Face Registration</h3>
+                <p class="mt-3 leading-7 text-af-secondary">Add your face encoding or improve recognition accuracy by registering another clear image.</p>
+                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-accent">
+                    <span>{% if summary.face_registered %}Encoding available{% else %}Setup required{% endif %}</span>
+                    <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                </div>
             </a>
 
-            <a href="{{ url_for('face.recognize') }}" class="feature-card">
-                <div class="feature-icon"><i class="bi bi-person-check"></i></div>
-                <div class="feature-status">Live</div>
-                <h3>Face Identification</h3>
-                <p>Search uploaded or webcam-captured faces against registered users in your database.</p>
-                <div class="feature-footer"><span>Database search</span><i class="bi bi-arrow-right"></i></div>
+            <a href="{{ url_for('face.recognize') }}" class="group af-card no-underline">
+                <div class="mb-5 flex items-start justify-between gap-4">
+                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi bi-person-check"></i></div>
+                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">Live</span>
+                </div>
+                <h3 class="font-display text-2xl font-extrabold text-af-text">Face Identification</h3>
+                <p class="mt-3 leading-7 text-af-secondary">Search uploaded or webcam-captured faces against registered users in your database.</p>
+                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-accent">
+                    <span>Database search</span>
+                    <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                </div>
             </a>
 
-            <a href="{{ url_for('mood.scan') }}" class="feature-card">
-                <div class="feature-icon"><i class="bi bi-emoji-smile"></i></div>
-                <div class="feature-status">Live</div>
-                <h3>Mood Detection</h3>
-                <p>Analyze emotion and receive practical routine suggestions based on the detected mood.</p>
-                <div class="feature-footer"><span>{{ summary.total_scans }} scans stored</span><i class="bi bi-arrow-right"></i></div>
+            <a href="{{ url_for('mood.scan') }}" class="group af-card no-underline">
+                <div class="mb-5 flex items-start justify-between gap-4">
+                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi bi-emoji-smile"></i></div>
+                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">Live</span>
+                </div>
+                <h3 class="font-display text-2xl font-extrabold text-af-text">Mood Detection</h3>
+                <p class="mt-3 leading-7 text-af-secondary">Analyze emotion and receive practical routine suggestions based on the detected mood.</p>
+                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-accent">
+                    <span>{{ summary.total_scans }} scans stored</span>
+                    <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                </div>
             </a>
         </div>
     </section>
 
-    <section>
-        <div class="section-heading">
-            <div>
-                <h2>Coming Soon</h2>
-                <p>Dummy UI only for the next features you plan to implement later.</p>
-            </div>
+    <section class="space-y-5">
+        <div>
+            <h2 class="font-display text-3xl font-extrabold text-af-text">Coming Soon</h2>
+            <p class="mt-1 text-af-muted">Dummy UI only for the next features you plan to implement later.</p>
         </div>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="bi bi-calendar-heart"></i></div>
-                <div class="feature-status soon">Soon</div>
-                <h3>Age Prediction</h3>
-                <p>Estimate a person’s age from a submitted face image and show prediction confidence.</p>
-                <div class="feature-footer"><span>No route yet</span><i class="bi bi-lock"></i></div>
+
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            {% for icon, title, text, footer in [
+                ('bi-calendar-heart', 'Age Prediction', 'Estimate a person age from a submitted face image and show prediction confidence.', 'No route yet'),
+                ('bi-hourglass-split', 'Age Simulation', 'Preview younger or older versions of a face while preserving the user identity.', 'Placeholder only'),
+                ('bi-magic', 'Mood Image Generation', 'Generate an adjusted face image by changing selected expression features.', 'Prototype pending')
+            ] %}
+            <div class="af-card opacity-85">
+                <div class="mb-5 flex items-start justify-between gap-4">
+                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi {{ icon }}"></i></div>
+                    <span class="rounded-full bg-af-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-af-accent">Soon</span>
+                </div>
+                <h3 class="font-display text-2xl font-extrabold text-af-text">{{ title }}</h3>
+                <p class="mt-3 leading-7 text-af-secondary">{{ text }}</p>
+                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-muted">
+                    <span>{{ footer }}</span>
+                    <i class="bi bi-lock"></i>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="bi bi-hourglass-split"></i></div>
-                <div class="feature-status soon">Soon</div>
-                <h3>Age Simulation</h3>
-                <p>Preview younger or older versions of a face while preserving the user’s identity.</p>
-                <div class="feature-footer"><span>Placeholder only</span><i class="bi bi-lock"></i></div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="bi bi-magic"></i></div>
-                <div class="feature-status soon">Soon</div>
-                <h3>Mood Image Generation</h3>
-                <p>Generate an adjusted face image by changing selected expression features.</p>
-                <div class="feature-footer"><span>Prototype pending</span><i class="bi bi-lock"></i></div>
-            </div>
+            {% endfor %}
         </div>
     </section>
 
-    <section class="activity-grid">
-        <div class="activity-panel">
-            <div class="activity-panel-head">
-                <div class="activity-panel-title">Recent Mood Scans</div>
-                <a href="{{ url_for('mood.history') }}" class="activity-link">View history</a>
+    <section class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <div class="af-card">
+            <div class="mb-5 flex items-center justify-between gap-3">
+                <div class="font-display text-xl font-extrabold text-af-text">Recent Mood Scans</div>
+                <a href="{{ url_for('mood.history') }}" class="text-sm font-semibold text-af-accent no-underline">View history</a>
             </div>
             {% if summary.recent_moods %}
-                {% for log in summary.recent_moods %}
-                <div class="activity-item">
-                    <div class="activity-dot {{ log.mood_category | lower if log.mood_category else 'neutral' }}"></div>
-                    <div>
-                        <div class="activity-title">{{ log.dominant_emotion }}</div>
-                        <div class="activity-time">{{ log.created_at[:16] }}</div>
+                <div class="space-y-3">
+                    {% for log in summary.recent_moods %}
+                    <div class="flex items-center gap-3 rounded-2xl border border-af-border bg-af-base/60 p-3">
+                        <span class="h-3 w-3 rounded-full {% if log.mood_category == 'Positive' %}bg-emerald-500{% elif log.mood_category == 'Negative' %}bg-red-500{% else %}bg-af-accent{% endif %}"></span>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-semibold capitalize text-af-text">{{ log.dominant_emotion }}</div>
+                            <div class="text-xs text-af-muted">{{ log.created_at[:16] }}</div>
+                        </div>
+                        <span class="badge-af {% if log.mood_category == 'Positive' %}bg-emerald-500/10 text-emerald-600{% elif log.mood_category == 'Negative' %}bg-red-500/10 text-red-500{% else %}bg-af-accent/10 text-af-accent{% endif %}">
+                            {{ "%.0f"|format(log.confidence * 100) }}%
+                        </span>
                     </div>
-                    <span class="badge-af {% if log.mood_category == 'Positive' %}badge-positive{% elif log.mood_category == 'Negative' %}badge-negative{% else %}badge-neutral{% endif %}">
-                        {{ "%.0f"|format(log.confidence * 100) }}%
-                    </span>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-emoji-neutral"></i>
-                    <p>No mood scans yet.<br><a href="{{ url_for('mood.scan') }}" style="color:var(--accent);">Run your first scan</a></p>
+                    <i class="bi bi-emoji-neutral mb-3 block text-4xl opacity-40"></i>
+                    <p>No mood scans yet.<br><a href="{{ url_for('mood.scan') }}" class="text-af-accent">Run your first scan</a></p>
                 </div>
             {% endif %}
         </div>
 
-        <div class="activity-panel">
-            <div class="activity-panel-head">
-                <div class="activity-panel-title">Recent Recognitions</div>
-                <a href="{{ url_for('dashboard.analytics') }}" class="activity-link">Open analytics</a>
+        <div class="af-card">
+            <div class="mb-5 flex items-center justify-between gap-3">
+                <div class="font-display text-xl font-extrabold text-af-text">Recent Recognitions</div>
+                <a href="{{ url_for('dashboard.analytics') }}" class="text-sm font-semibold text-af-accent no-underline">Open analytics</a>
             </div>
             {% if summary.recent_recognitions %}
-                {% for log in summary.recent_recognitions %}
-                <div class="activity-item">
-                    <div class="activity-dot {{ log.status }}"></div>
-                    <div>
-                        <div class="activity-title">
-                            {% if log.status == 'matched' %}
-                                Matched: {{ log.matched_user_name or 'Unknown' }}
-                            {% elif log.status == 'error' %}
-                                Recognition error
-                            {% else %}
-                                No match found
-                            {% endif %}
+                <div class="space-y-3">
+                    {% for log in summary.recent_recognitions %}
+                    <div class="flex items-center gap-3 rounded-2xl border border-af-border bg-af-base/60 p-3">
+                        <span class="h-3 w-3 rounded-full {% if log.status == 'matched' %}bg-emerald-500{% elif log.status == 'error' %}bg-zinc-400{% else %}bg-red-500{% endif %}"></span>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-semibold text-af-text">
+                                {% if log.status == 'matched' %}
+                                    Matched: {{ log.matched_user_name or 'Unknown' }}
+                                {% elif log.status == 'error' %}
+                                    Recognition error
+                                {% else %}
+                                    No match found
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-af-muted">{{ log.created_at[:16] }}</div>
                         </div>
-                        <div class="activity-time">{{ log.created_at[:16] }}</div>
+                        <span class="badge-af {% if log.status == 'matched' %}bg-emerald-500/10 text-emerald-600{% else %}bg-red-500/10 text-red-500{% endif %}">
+                            {{ log.status | capitalize }}
+                        </span>
                     </div>
-                    <span class="badge-af {% if log.status == 'matched' %}badge-positive{% else %}badge-negative{% endif %}">
-                        {{ log.status | capitalize }}
-                    </span>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-person-x"></i>
-                    <p>No recognition attempts yet.<br><a href="{{ url_for('face.recognize') }}" style="color:var(--accent);">Try recognition</a></p>
+                    <i class="bi bi-person-x mb-3 block text-4xl opacity-40"></i>
+                    <p>No recognition attempts yet.<br><a href="{{ url_for('face.recognize') }}" class="text-af-accent">Try recognition</a></p>
                 </div>
             {% endif %}
         </div>
     </section>
-
 </div>
 {% endblock %}
