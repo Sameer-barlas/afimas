@@ -43,24 +43,25 @@
 
 {% if session.get('user_id') and not hide_sidebar | default(false) %}
     <aside id="sidebar"
-           class="fixed left-0 top-0 z-[100] flex h-screen w-[264px] -translate-x-full flex-col overflow-hidden border-r border-af-border bg-white/90 shadow-[14px_0_44px_rgba(64,44,128,0.08)] backdrop-blur-xl transition-all duration-300 md:translate-x-0">
-        <div class="flex items-center gap-3 border-b border-af-border px-6 py-6">
-            <a href="{{ url_for('dashboard.index') }}" class="flex min-w-0 flex-1 items-center gap-3 font-display text-2xl font-extrabold text-af-text no-underline">
+           class="fixed left-0 top-0 z-[100] flex h-screen w-[264px] -translate-x-full flex-col overflow-visible border-r border-af-border bg-white/90 shadow-[14px_0_44px_rgba(64,44,128,0.08)] backdrop-blur-xl transition-all duration-300 md:translate-x-0">
+        <button type="button"
+                class="absolute -right-5 top-7 z-20 hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-af-border bg-white text-af-secondary shadow-af-card transition hover:border-af-border-accent hover:bg-af-accent/10 hover:text-af-accent md:inline-flex"
+                onclick="toggleSidebarCollapse()"
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar">
+            <i id="collapseIcon" class="bi bi-layout-sidebar-inset transition"></i>
+        </button>
+
+        <div data-sidebar-header class="flex items-center gap-3 border-b border-af-border px-6 py-6 transition-all duration-300">
+            <a data-brand-link href="{{ url_for('dashboard.index') }}" class="flex min-w-0 flex-1 items-center gap-3 font-display text-2xl font-extrabold text-af-text no-underline transition-all duration-300">
                 <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-af-accent to-af-accent-2 text-base text-white">
                     <i class="bi bi-cpu"></i>
                 </span>
-                <span data-collapse-hide>
+                <span data-collapse-hide class="min-w-0 truncate">
                     AFIMAS
                     <span class="block text-xs font-bold uppercase tracking-[0.14em] text-af-muted">Face & Mood AI</span>
                 </span>
             </a>
-            <button type="button"
-                    class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-af-border bg-white text-af-secondary shadow-sm transition hover:border-af-border-accent hover:text-af-accent md:inline-flex"
-                    onclick="toggleSidebarCollapse()"
-                    title="Collapse sidebar"
-                    aria-label="Collapse sidebar">
-                <i id="collapseIcon" class="bi bi-chevron-left transition"></i>
-            </button>
         </div>
 
         <div data-collapse-hide class="border-b border-af-border bg-af-accent/10 px-6 py-4">
@@ -80,6 +81,27 @@
             <div data-collapse-hide class="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-af-muted">Mood</div>
             {{ nav_item('mood.scan', 'bi-emoji-smile', 'Mood Scan') }}
             {{ nav_item('mood.history', 'bi-clock-history', 'Scan History') }}
+
+            <div data-collapse-hide class="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-af-muted">AI Tools</div>
+            {{ nav_item('age.predict', 'bi-calendar-heart', 'Age Prediction') }}
+
+            <div data-collapse-hide class="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-af-muted">Advanced Modules</div>
+            <div class="space-y-1">
+                <div class="flex cursor-not-allowed items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-af-muted opacity-70">
+                    <i class="bi bi-hourglass-split w-5 shrink-0 text-center text-lg"></i>
+                    <span data-collapse-hide class="flex min-w-0 flex-1 items-center justify-between gap-2">
+                        <span class="truncate">Age Simulation</span>
+                        <i class="bi bi-lock-fill text-xs"></i>
+                    </span>
+                </div>
+                <div class="flex cursor-not-allowed items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-af-muted opacity-70">
+                    <i class="bi bi-image w-5 shrink-0 text-center text-lg"></i>
+                    <span data-collapse-hide class="flex min-w-0 flex-1 items-center justify-between gap-2">
+                        <span class="truncate">Mood Image Generation</span>
+                        <i class="bi bi-lock-fill text-xs"></i>
+                    </span>
+                </div>
+            </div>
         </nav>
 
         <div class="border-t border-af-border p-3">
@@ -125,6 +147,7 @@
                         <a href="{{ url_for('face.recognize') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Recognize</a>
                         <a href="{{ url_for('mood.scan') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Mood Scan</a>
                         <a href="{{ url_for('mood.history') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Mood History</a>
+                        <a href="{{ url_for('age.predict') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Age Prediction</a>
                         <a href="{{ url_for('auth.logout') }}" class="btn-af-secondary">Sign Out</a>
                     {% else %}
                         <a href="{{ url_for('auth.signup') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Create Account</a>
@@ -163,19 +186,39 @@ function applySidebarPreference() {
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('mainContent');
     const icon = document.getElementById('collapseIcon');
+    const header = document.querySelector('[data-sidebar-header]');
+    const brandLink = document.querySelector('[data-brand-link]');
     if (!sidebar || !main) return;
 
     sidebar.classList.toggle('md:w-[88px]', collapsed);
     sidebar.classList.toggle('md:w-[264px]', !collapsed);
     main.classList.toggle('md:ml-[88px]', collapsed);
     main.classList.toggle('md:ml-[264px]', !collapsed);
+
+    header?.classList.toggle('md:justify-center', collapsed);
+    header?.classList.toggle('md:px-3', collapsed);
+    header?.classList.toggle('md:py-4', collapsed);
+    header?.classList.toggle('md:px-6', !collapsed);
+    header?.classList.toggle('md:py-6', !collapsed);
+
+    brandLink?.classList.toggle('md:flex-none', collapsed);
+    brandLink?.classList.toggle('md:justify-center', collapsed);
+    brandLink?.classList.toggle('md:flex-1', !collapsed);
+
     document.querySelectorAll('[data-collapse-hide]').forEach(el => {
         el.classList.toggle('md:hidden', collapsed);
     });
     document.querySelectorAll('#sidebar nav a').forEach(el => {
         el.classList.toggle('md:justify-center', collapsed);
+        el.classList.toggle('md:px-0', collapsed);
+        el.classList.toggle('md:py-3.5', collapsed);
+        el.classList.toggle('md:border-l-0', collapsed);
     });
-    icon?.classList.toggle('rotate-180', collapsed);
+
+    if (icon) {
+        icon.classList.toggle('bi-layout-sidebar-inset', !collapsed);
+        icon.classList.toggle('bi-layout-sidebar-inset-reverse', collapsed);
+    }
 }
 
 function toggleSidebar() {

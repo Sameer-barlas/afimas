@@ -1,0 +1,139 @@
+{% macro webcam_capture(prefix, title, subtitle, capture_label, accent='cyan', endpoint=None, result_handler='handleWebcamResult') %}
+<div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
+    <div class="mb-5">
+        <h2 class="font-display text-2xl font-extrabold text-af-text">{{ title }}</h2>
+        <p class="mt-1 text-sm text-af-muted">{{ subtitle }}</p>
+    </div>
+
+    <div id="{{ prefix }}CameraBox" class="relative flex min-h-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-af-border bg-af-text">
+        <video id="{{ prefix }}Video" autoplay playsinline class="hidden h-full max-h-[420px] w-full object-cover"></video>
+        <img id="{{ prefix }}Preview" alt="Captured webcam frame" class="hidden h-full max-h-[420px] w-full object-contain bg-af-text"/>
+
+        <div id="{{ prefix }}Placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-white">
+            <div class="grid h-16 w-16 place-items-center rounded-3xl bg-white/10 text-3xl text-cyan-300">
+                <i class="bi bi-camera-video"></i>
+            </div>
+            <div class="mt-4 font-display text-2xl font-extrabold">Camera capture</div>
+            <div class="mt-2 max-w-sm text-sm leading-6 text-white/60">Start the camera, capture a clear frame, then send it for analysis.</div>
+        </div>
+    </div>
+
+    <div id="{{ prefix }}Status" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+
+    <div class="mt-5 flex flex-wrap gap-3">
+        <button type="button" id="{{ prefix }}Start" class="btn-af-secondary" onclick="{{ prefix }}StartWebcam()">
+            <i class="bi bi-camera-video"></i> Start Camera
+        </button>
+        <button type="button" id="{{ prefix }}Capture" class="btn-af-primary hidden" onclick="{{ prefix }}CaptureWebcam()">
+            <i class="bi bi-camera"></i> {{ capture_label }}
+        </button>
+        <button type="button" id="{{ prefix }}Retake" class="btn-af-secondary hidden" onclick="{{ prefix }}RetakeWebcam()">
+            <i class="bi bi-arrow-repeat"></i> Retake
+        </button>
+        <button type="button" id="{{ prefix }}Stop" class="btn-af-danger hidden" onclick="{{ prefix }}StopWebcam()">
+            <i class="bi bi-x-circle"></i> Stop
+        </button>
+    </div>
+</div>
+
+<script>
+let {{ prefix }}Stream = null;
+let {{ prefix }}CapturedData = null;
+
+function {{ prefix }}El(id) {
+    return document.getElementById('{{ prefix }}' + id);
+}
+
+function {{ prefix }}SetStatus(type, message) {
+    const el = {{ prefix }}El('Status');
+    el.className = 'mt-4 rounded-2xl border px-4 py-3 text-sm';
+    if (!message) {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+    }
+
+    el.classList.remove('hidden');
+    if (type === 'success') {
+        el.classList.add('border-emerald-200', 'bg-emerald-50', 'text-emerald-600');
+    } else if (type === 'error') {
+        el.classList.add('border-red-200', 'bg-red-50', 'text-red-600');
+    } else {
+        el.classList.add('border-af-border', 'bg-af-base', 'text-af-secondary');
+    }
+    el.innerHTML = message;
+}
+
+async function {{ prefix }}StartWebcam() {
+    try {
+        {{ prefix }}Stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        {{ prefix }}El('Video').srcObject = {{ prefix }}Stream;
+        {{ prefix }}El('Video').classList.remove('hidden');
+        {{ prefix }}El('Placeholder').classList.add('hidden');
+        {{ prefix }}El('Preview').classList.add('hidden');
+        {{ prefix }}El('Start').classList.add('hidden');
+        {{ prefix }}El('Capture').classList.remove('hidden');
+        {{ prefix }}El('Stop').classList.remove('hidden');
+        {{ prefix }}El('Retake').classList.add('hidden');
+        {{ prefix }}SetStatus('', '');
+    } catch (error) {
+        {{ prefix }}SetStatus('error', '<i class="bi bi-exclamation-circle"></i> Camera access denied or unavailable.');
+    }
+}
+
+function {{ prefix }}StopWebcam() {
+    if ({{ prefix }}Stream) {
+        {{ prefix }}Stream.getTracks().forEach(track => track.stop());
+        {{ prefix }}Stream = null;
+    }
+    {{ prefix }}El('Video').classList.add('hidden');
+    {{ prefix }}El('Preview').classList.add('hidden');
+    {{ prefix }}El('Placeholder').classList.remove('hidden');
+    {{ prefix }}El('Start').classList.remove('hidden');
+    {{ prefix }}El('Capture').classList.add('hidden');
+    {{ prefix }}El('Retake').classList.add('hidden');
+    {{ prefix }}El('Stop').classList.add('hidden');
+}
+
+function {{ prefix }}RetakeWebcam() {
+    {{ prefix }}CapturedData = null;
+    {{ prefix }}El('Preview').classList.add('hidden');
+    {{ prefix }}El('Video').classList.remove('hidden');
+    {{ prefix }}El('Capture').classList.remove('hidden');
+    {{ prefix }}El('Retake').classList.add('hidden');
+    {{ prefix }}SetStatus('', '');
+}
+
+async function {{ prefix }}CaptureWebcam() {
+    const video = {{ prefix }}El('Video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    {{ prefix }}CapturedData = canvas.toDataURL('image/jpeg', 0.92);
+
+    {{ prefix }}El('Preview').src = {{ prefix }}CapturedData;
+    {{ prefix }}El('Preview').classList.remove('hidden');
+    {{ prefix }}El('Video').classList.add('hidden');
+    {{ prefix }}El('Capture').classList.add('hidden');
+    {{ prefix }}El('Retake').classList.remove('hidden');
+
+    {{ prefix }}SetStatus('info', '<i class="bi bi-hourglass-split"></i> Processing capture...');
+
+    try {
+        const response = await fetch('{{ endpoint }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_data: {{ prefix }}CapturedData })
+        });
+        const result = await response.json();
+        window['{{ result_handler }}'](result, response.ok);
+        {{ prefix }}SetStatus(response.ok ? 'success' : 'error', response.ok
+            ? '<i class="bi bi-check-circle"></i> Capture processed successfully.'
+            : '<i class="bi bi-exclamation-circle"></i> ' + (result.message || 'Processing failed.'));
+    } catch (error) {
+        {{ prefix }}SetStatus('error', '<i class="bi bi-exclamation-circle"></i> Network error while processing capture.');
+    }
+}
+</script>
+{% endmacro %}

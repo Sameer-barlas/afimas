@@ -2,177 +2,259 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="space-y-12 overflow-x-clip">
-    <section class="overflow-hidden rounded-[30px] border border-af-border-accent/50 bg-gradient-to-br from-af-accent/10 via-white/35 to-af-accent-3/10 p-4 shadow-af-card md:p-5">
-        <div class="rounded-[26px] border border-white/70 p-5 md:p-8 2xl:p-10">
-            <div class="grid min-w-0 items-center gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
+<div class="space-y-8 overflow-x-clip">
+    <section class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div class="min-w-0 rounded-[28px] border border-af-border bg-white/85 p-6 shadow-af-card backdrop-blur-xl md:p-8">
+            <div class="mb-7 flex flex-wrap items-center justify-between gap-4">
+                <div class="inline-flex items-center gap-2 rounded-full border border-af-border-accent bg-af-accent/10 px-3.5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-af-accent">
+                    <i class="bi bi-stars"></i>
+                    AFIMAS Control Center
+                </div>
+                <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-600">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    Workspace active
+                </div>
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
                 <div class="min-w-0">
-                    <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-af-border-accent bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] text-af-accent">
-                        <i class="bi bi-stars"></i>
-                        Your AI control center
-                    </div>
-
-                    <h1 class="mb-6 max-w-full break-words font-display text-[clamp(2.7rem,6.4vw,5.4rem)] font-extrabold leading-[0.96] text-af-text 2xl:text-[clamp(3.2rem,5.8vw,6rem)]">
-                        Welcome back, {{ user.name }}
+                    <p class="mb-2 text-sm font-semibold uppercase tracking-[0.14em] text-af-muted">Welcome back</p>
+                    <h1 class="max-w-4xl break-words font-display text-4xl font-extrabold leading-tight text-af-text md:text-5xl xl:text-6xl">
+                        {{ user.name }}
                     </h1>
-                    <p class="mb-8 max-w-4xl text-lg leading-8 text-af-secondary">
-                        Use AFIMAS to identify faces, analyze mood, review insights, and prepare for upcoming age and image-generation tools from one clear workspace.
+                    <p class="mt-4 max-w-3xl text-base leading-7 text-af-secondary md:text-lg">
+                        Monitor face recognition, mood analysis, and activity logs from one focused workspace.
                     </p>
-
-                    <div class="flex flex-wrap gap-3">
-                        <a href="{{ url_for('mood.scan') }}" class="btn-af-primary">
-                            <i class="bi bi-emoji-smile"></i> Run Mood Scan
-                        </a>
-                        <a href="{{ url_for('face.recognize') }}" class="btn-af-secondary">
-                            <i class="bi bi-person-check"></i> Recognize Face
-                        </a>
-                        <a href="{{ url_for('dashboard.analytics') }}" class="btn-af-secondary">
-                            <i class="bi bi-bar-chart-line"></i> Open Analytics
-                        </a>
-                    </div>
                 </div>
 
-                <aside class="relative z-10 w-full max-w-[460px] justify-self-start rounded-[28px] bg-white/95 p-6 shadow-af-card md:p-8 2xl:justify-self-end">
-                    <div class="mb-7 grid h-24 w-24 place-items-center rounded-[28px] bg-gradient-to-br from-af-accent to-af-accent-2 font-display text-5xl font-extrabold text-white">
-                        {{ (user.name[:1] if user and user.name else 'U') | upper }}
+                <div class="rounded-3xl border border-af-border bg-gradient-to-br from-af-accent/10 to-af-accent-3/10 p-4">
+                    <div class="text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Face readiness</div>
+                    <div class="mt-3 flex items-center gap-3">
+                        <div class="grid h-12 w-12 place-items-center rounded-2xl {% if summary.face_registered %}bg-emerald-500{% else %}bg-af-warn{% endif %} text-xl text-white">
+                            <i class="bi {% if summary.face_registered %}bi-shield-check{% else %}bi-exclamation-triangle{% endif %}"></i>
+                        </div>
+                        <div>
+                            <div class="font-display text-2xl font-extrabold text-af-text">
+                                {% if summary.face_registered %}Ready{% else %}Setup{% endif %}
+                            </div>
+                            <div class="text-sm text-af-muted">Recognition status</div>
+                        </div>
                     </div>
-                    <div class="font-display text-3xl font-extrabold leading-tight text-af-text">{{ user.name }}</div>
-                    <div class="mt-3 text-base text-af-muted">{{ user.email }}</div>
+                </div>
+            </div>
 
-                    <div class="mt-6 divide-y divide-af-border">
-                        <div class="flex items-center justify-between gap-4 py-4 text-af-muted">
-                            <span>Age</span>
-                            <span class="font-bold text-af-text">{{ user.age or 'Not set' }}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-4 py-4 text-af-muted">
-                            <span>Face status</span>
-                            <span class="font-bold text-af-text">{% if summary.face_registered %}Ready{% else %}Pending{% endif %}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-4 py-4 text-af-muted">
-                            <span>Member since</span>
-                            <span class="font-bold text-af-text">{{ user.created_at[:10] if user.created_at else 'Today' }}</span>
-                        </div>
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a href="{{ url_for('mood.scan') }}" class="btn-af-primary">
+                    <i class="bi bi-emoji-smile"></i> Run Mood Scan
+                </a>
+                <a href="{{ url_for('face.recognize') }}" class="btn-af-secondary">
+                    <i class="bi bi-person-check"></i> Recognize Face
+                </a>
+                <a href="{{ url_for('dashboard.analytics') }}" class="btn-af-secondary">
+                    <i class="bi bi-bar-chart-line"></i> Open Analytics
+                </a>
+            </div>
+        </div>
+
+        <aside class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card backdrop-blur-xl">
+            <div class="flex items-center gap-4">
+                <div class="grid h-16 w-16 shrink-0 place-items-center rounded-3xl bg-gradient-to-br from-af-accent to-af-accent-2 font-display text-3xl font-extrabold text-white">
+                    {{ (user.name[:1] if user and user.name else 'U') | upper }}
+                </div>
+                <div class="min-w-0">
+                    <div class="truncate font-display text-2xl font-extrabold text-af-text">{{ user.name }}</div>
+                    <div class="truncate text-sm text-af-muted">{{ user.email }}</div>
+                </div>
+            </div>
+
+            <div class="mt-6 divide-y divide-af-border rounded-3xl border border-af-border bg-af-base/50 px-4">
+                <div class="flex items-center justify-between gap-4 py-4">
+                    <span class="text-sm text-af-muted">Age</span>
+                    <span class="font-bold text-af-text">{{ user.age or 'Not set' }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4 py-4">
+                    <span class="text-sm text-af-muted">Face status</span>
+                    <span class="font-bold {% if summary.face_registered %}text-emerald-600{% else %}text-af-warn{% endif %}">
+                        {% if summary.face_registered %}Ready{% else %}Pending{% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between gap-4 py-4">
+                    <span class="text-sm text-af-muted">Member since</span>
+                    <span class="font-bold text-af-text">{{ user.created_at[:10] if user.created_at else 'Today' }}</span>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 2xl:grid-cols-4">
+        <div class="rounded-[24px] border border-af-border bg-white/90 p-5 shadow-af-card">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Mood scans</div>
+                    <div class="mt-3 font-display text-4xl font-extrabold text-af-text">{{ summary.total_scans }}</div>
+                </div>
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-af-accent/10 text-xl text-af-accent">
+                    <i class="bi bi-emoji-smile"></i>
+                </div>
+            </div>
+            <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-af-base">
+                <div class="h-full w-3/4 rounded-full bg-gradient-to-r from-af-accent to-af-accent-2"></div>
+            </div>
+        </div>
+
+        <div class="rounded-[24px] border border-af-border bg-white/90 p-5 shadow-af-card">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Top mood</div>
+                    <div class="mt-3 truncate font-display text-3xl font-extrabold capitalize text-af-text">{{ summary.most_common_mood }}</div>
+                </div>
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-amber-100 text-xl text-amber-500">
+                    <i class="bi bi-trophy"></i>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-af-muted">Most common detected emotion</p>
+        </div>
+
+        <div class="rounded-[24px] border border-af-border bg-white/90 p-5 shadow-af-card">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Face ID</div>
+                    <div class="mt-3 font-display text-3xl font-extrabold text-af-text">{% if summary.face_registered %}Active{% else %}Setup{% endif %}</div>
+                </div>
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-af-accent-2/10 text-xl text-af-accent-2">
+                    <i class="bi bi-person-bounding-box"></i>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-af-muted">Recognition encoding status</p>
+        </div>
+
+        <div class="rounded-[24px] border border-af-border bg-white/90 p-5 shadow-af-card">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Recent logs</div>
+                    <div class="mt-3 font-display text-4xl font-extrabold text-af-text">{{ summary.recent_recognitions | length }}</div>
+                </div>
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-af-accent-3/10 text-xl text-af-accent-3">
+                    <i class="bi bi-activity"></i>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-af-muted">Recognition attempts shown below</p>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-display text-2xl font-extrabold text-af-text">Core tools</h2>
+                    <p class="mt-1 text-sm text-af-muted">Fast access to the routes already connected in your app.</p>
+                </div>
+                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">4 live</span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+                <a href="{{ url_for('face.register_face') }}" class="group rounded-3xl border border-af-border bg-gradient-to-br from-white to-af-base/70 p-5 no-underline transition hover:-translate-y-1 hover:border-af-border-accent hover:shadow-af-glow">
+                    <div class="mb-5 grid h-13 w-13 place-items-center rounded-2xl bg-af-accent/10 text-2xl text-af-accent">
+                        <i class="bi bi-person-bounding-box"></i>
                     </div>
-                </aside>
+                    <h3 class="font-display text-xl font-extrabold text-af-text">Register Face</h3>
+                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Add or refresh the face encoding used for identification.</p>
+                    <div class="mt-5 flex items-center justify-between text-sm font-bold text-af-accent">
+                        <span>{% if summary.face_registered %}Encoding ready{% else %}Setup needed{% endif %}</span>
+                        <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('face.recognize') }}" class="group rounded-3xl border border-af-border bg-gradient-to-br from-white to-af-base/70 p-5 no-underline transition hover:-translate-y-1 hover:border-af-border-accent hover:shadow-af-glow">
+                    <div class="mb-5 grid h-13 w-13 place-items-center rounded-2xl bg-af-accent-2/10 text-2xl text-af-accent-2">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-extrabold text-af-text">Recognize</h3>
+                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Search uploaded or webcam-captured faces against the database.</p>
+                    <div class="mt-5 flex items-center justify-between text-sm font-bold text-af-accent">
+                        <span>Database search</span>
+                        <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('mood.scan') }}" class="group rounded-3xl border border-af-border bg-gradient-to-br from-white to-af-base/70 p-5 no-underline transition hover:-translate-y-1 hover:border-af-border-accent hover:shadow-af-glow">
+                    <div class="mb-5 grid h-13 w-13 place-items-center rounded-2xl bg-af-warn/10 text-2xl text-af-warn">
+                        <i class="bi bi-emoji-smile"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-extrabold text-af-text">Mood Scan</h3>
+                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Analyze emotion and save the result to your mood history.</p>
+                    <div class="mt-5 flex items-center justify-between text-sm font-bold text-af-accent">
+                        <span>{{ summary.total_scans }} scans stored</span>
+                        <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('age.predict') }}" class="group rounded-3xl border border-af-border bg-gradient-to-br from-white to-cyan-50 p-5 no-underline transition hover:-translate-y-1 hover:border-cyan-200 hover:shadow-af-glow">
+                    <div class="mb-5 grid h-13 w-13 place-items-center rounded-2xl bg-cyan-500/10 text-2xl text-cyan-600">
+                        <i class="bi bi-calendar-heart"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-extrabold text-af-text">Age Prediction</h3>
+                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Estimate age from a face image and classify it as Child, Young, or Adult.</p>
+                    <div class="mt-5 flex items-center justify-between text-sm font-bold text-cyan-600">
+                        <span>DeepFace powered</span>
+                        <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="rounded-[28px] border border-af-border bg-af-text p-6 text-white shadow-af-card">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-display text-2xl font-extrabold">Roadmap</h2>
+                    <p class="mt-1 text-sm text-white/60">Upcoming AI modules</p>
+                </div>
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-xl">
+                    <i class="bi bi-magic"></i>
+                </div>
+            </div>
+
+            <div class="mt-6 space-y-3">
+                {% for icon, title, detail in [
+                    ('bi-hourglass-split', 'Age Simulation', 'Preview younger or older versions'),
+                    ('bi-image', 'Mood Image Generation', 'Generate expression-adjusted images')
+                ] %}
+                <div class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-af-accent-3">
+                        <i class="bi {{ icon }}"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold">{{ title }}</div>
+                        <div class="mt-1 text-sm text-white/60">{{ detail }}</div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="border-t-4 border-af-accent af-card">
-            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Mood scans</div>
-            <div class="mt-4 font-display text-5xl font-extrabold text-af-text">{{ summary.total_scans }}</div>
-            <div class="mt-2 text-sm text-af-muted">Total saved emotion results</div>
-        </div>
-        <div class="border-t-4 border-af-accent af-card">
-            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Top mood</div>
-            <div class="mt-4 font-display text-3xl font-extrabold capitalize text-af-text">{{ summary.most_common_mood }}</div>
-            <div class="mt-2 text-sm text-af-muted">Most common detected emotion</div>
-        </div>
-        <div class="border-t-4 border-af-accent-2 af-card">
-            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Face ID</div>
-            <div class="mt-4 font-display text-3xl font-extrabold text-af-text">{% if summary.face_registered %}Active{% else %}Setup{% endif %}</div>
-            <div class="mt-2 text-sm text-af-muted">Recognition encoding status</div>
-        </div>
-        <div class="border-t-4 border-af-accent-3 af-card">
-            <div class="text-sm font-bold uppercase tracking-[0.08em] text-af-muted">Recognition logs</div>
-            <div class="mt-4 font-display text-5xl font-extrabold text-af-text">{{ summary.recent_recognitions | length }}</div>
-            <div class="mt-2 text-sm text-af-muted">Latest attempts shown below</div>
-        </div>
-    </section>
-
-    <section class="space-y-5">
-        <div>
-            <h2 class="font-display text-3xl font-extrabold text-af-text">Available Features</h2>
-            <p class="mt-1 text-af-muted">These tools are connected to real routes and ready to use.</p>
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            <a href="{{ url_for('face.register_face') }}" class="group af-card no-underline">
-                <div class="mb-5 flex items-start justify-between gap-4">
-                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi bi-person-bounding-box"></i></div>
-                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">Live</span>
-                </div>
-                <h3 class="font-display text-2xl font-extrabold text-af-text">Face Registration</h3>
-                <p class="mt-3 leading-7 text-af-secondary">Add your face encoding or improve recognition accuracy by registering another clear image.</p>
-                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-accent">
-                    <span>{% if summary.face_registered %}Encoding available{% else %}Setup required{% endif %}</span>
-                    <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
-                </div>
-            </a>
-
-            <a href="{{ url_for('face.recognize') }}" class="group af-card no-underline">
-                <div class="mb-5 flex items-start justify-between gap-4">
-                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi bi-person-check"></i></div>
-                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">Live</span>
-                </div>
-                <h3 class="font-display text-2xl font-extrabold text-af-text">Face Identification</h3>
-                <p class="mt-3 leading-7 text-af-secondary">Search uploaded or webcam-captured faces against registered users in your database.</p>
-                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-accent">
-                    <span>Database search</span>
-                    <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
-                </div>
-            </a>
-
-            <a href="{{ url_for('mood.scan') }}" class="group af-card no-underline">
-                <div class="mb-5 flex items-start justify-between gap-4">
-                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi bi-emoji-smile"></i></div>
-                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">Live</span>
-                </div>
-                <h3 class="font-display text-2xl font-extrabold text-af-text">Mood Detection</h3>
-                <p class="mt-3 leading-7 text-af-secondary">Analyze emotion and receive practical routine suggestions based on the detected mood.</p>
-                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-accent">
-                    <span>{{ summary.total_scans }} scans stored</span>
-                    <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
-                </div>
-            </a>
-        </div>
-    </section>
-
-    <section class="space-y-5">
-        <div>
-            <h2 class="font-display text-3xl font-extrabold text-af-text">Coming Soon</h2>
-            <p class="mt-1 text-af-muted">Dummy UI only for the next features you plan to implement later.</p>
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            {% for icon, title, text, footer in [
-                ('bi-calendar-heart', 'Age Prediction', 'Estimate a person age from a submitted face image and show prediction confidence.', 'No route yet'),
-                ('bi-hourglass-split', 'Age Simulation', 'Preview younger or older versions of a face while preserving the user identity.', 'Placeholder only'),
-                ('bi-magic', 'Mood Image Generation', 'Generate an adjusted face image by changing selected expression features.', 'Prototype pending')
-            ] %}
-            <div class="af-card opacity-85">
-                <div class="mb-5 flex items-start justify-between gap-4">
-                    <div class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-af-accent to-af-accent-2 text-2xl text-white"><i class="bi {{ icon }}"></i></div>
-                    <span class="rounded-full bg-af-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-af-accent">Soon</span>
-                </div>
-                <h3 class="font-display text-2xl font-extrabold text-af-text">{{ title }}</h3>
-                <p class="mt-3 leading-7 text-af-secondary">{{ text }}</p>
-                <div class="mt-6 flex items-center justify-between border-t border-af-border pt-4 text-sm font-semibold text-af-muted">
-                    <span>{{ footer }}</span>
-                    <i class="bi bi-lock"></i>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section class="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <div class="af-card">
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <div class="font-display text-xl font-extrabold text-af-text">Recent Mood Scans</div>
-                <a href="{{ url_for('mood.history') }}" class="text-sm font-semibold text-af-accent no-underline">View history</a>
+                <div>
+                    <h2 class="font-display text-xl font-extrabold text-af-text">Recent mood scans</h2>
+                    <p class="mt-1 text-sm text-af-muted">Latest emotion analysis results</p>
+                </div>
+                <a href="{{ url_for('mood.history') }}" class="text-sm font-bold text-af-accent no-underline">View all</a>
             </div>
+
             {% if summary.recent_moods %}
                 <div class="space-y-3">
                     {% for log in summary.recent_moods %}
                     <div class="flex items-center gap-3 rounded-2xl border border-af-border bg-af-base/60 p-3">
-                        <span class="h-3 w-3 rounded-full {% if log.mood_category == 'Positive' %}bg-emerald-500{% elif log.mood_category == 'Negative' %}bg-red-500{% else %}bg-af-accent{% endif %}"></span>
+                        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl {% if log.mood_category == 'Positive' %}bg-emerald-500/10 text-emerald-600{% elif log.mood_category == 'Negative' %}bg-red-500/10 text-red-500{% else %}bg-af-accent/10 text-af-accent{% endif %}">
+                            <i class="bi bi-emoji-smile"></i>
+                        </div>
                         <div class="min-w-0 flex-1">
-                            <div class="font-semibold capitalize text-af-text">{{ log.dominant_emotion }}</div>
+                            <div class="font-bold capitalize text-af-text">{{ log.dominant_emotion }}</div>
                             <div class="text-xs text-af-muted">{{ log.created_at[:16] }}</div>
                         </div>
-                        <span class="badge-af {% if log.mood_category == 'Positive' %}bg-emerald-500/10 text-emerald-600{% elif log.mood_category == 'Negative' %}bg-red-500/10 text-red-500{% else %}bg-af-accent/10 text-af-accent{% endif %}">
+                        <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-af-secondary">
                             {{ "%.0f"|format(log.confidence * 100) }}%
                         </span>
                     </div>
@@ -186,18 +268,24 @@
             {% endif %}
         </div>
 
-        <div class="af-card">
+        <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <div class="font-display text-xl font-extrabold text-af-text">Recent Recognitions</div>
-                <a href="{{ url_for('dashboard.analytics') }}" class="text-sm font-semibold text-af-accent no-underline">Open analytics</a>
+                <div>
+                    <h2 class="font-display text-xl font-extrabold text-af-text">Recognition activity</h2>
+                    <p class="mt-1 text-sm text-af-muted">Recent face identification attempts</p>
+                </div>
+                <a href="{{ url_for('dashboard.analytics') }}" class="text-sm font-bold text-af-accent no-underline">Analytics</a>
             </div>
+
             {% if summary.recent_recognitions %}
                 <div class="space-y-3">
                     {% for log in summary.recent_recognitions %}
                     <div class="flex items-center gap-3 rounded-2xl border border-af-border bg-af-base/60 p-3">
-                        <span class="h-3 w-3 rounded-full {% if log.status == 'matched' %}bg-emerald-500{% elif log.status == 'error' %}bg-zinc-400{% else %}bg-red-500{% endif %}"></span>
+                        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl {% if log.status == 'matched' %}bg-emerald-500/10 text-emerald-600{% elif log.status == 'error' %}bg-zinc-200 text-zinc-500{% else %}bg-red-500/10 text-red-500{% endif %}">
+                            <i class="bi {% if log.status == 'matched' %}bi-person-check{% elif log.status == 'error' %}bi-exclamation-circle{% else %}bi-person-x{% endif %}"></i>
+                        </div>
                         <div class="min-w-0 flex-1">
-                            <div class="font-semibold text-af-text">
+                            <div class="truncate font-bold text-af-text">
                                 {% if log.status == 'matched' %}
                                     Matched: {{ log.matched_user_name or 'Unknown' }}
                                 {% elif log.status == 'error' %}
@@ -208,8 +296,8 @@
                             </div>
                             <div class="text-xs text-af-muted">{{ log.created_at[:16] }}</div>
                         </div>
-                        <span class="badge-af {% if log.status == 'matched' %}bg-emerald-500/10 text-emerald-600{% else %}bg-red-500/10 text-red-500{% endif %}">
-                            {{ log.status | capitalize }}
+                        <span class="rounded-full bg-white px-3 py-1 text-xs font-bold capitalize text-af-secondary">
+                            {{ log.status }}
                         </span>
                     </div>
                     {% endfor %}

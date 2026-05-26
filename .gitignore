@@ -18,6 +18,7 @@ node_modules/
 # Upload/generated files
 static/uploads/
 static/mood_captures/
+static/age_predictions/
 
 # OS junk
 .DS_Store

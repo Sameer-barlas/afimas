@@ -4,3 +4,4 @@ numpy
 opencv-python
 fer
 face-recognition
+tf-keras
