@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+
+# Environment variables
+.env
+
+# VS Code settings
+.vscode/
+
+# Upload/generated files
+static/uploads/
+static/mood_captures/
+
+# OS junk
+.DS_Store
+Thumbs.db

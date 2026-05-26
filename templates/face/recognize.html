@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+{% block title %}Face Recognition{% endblock %}
+
+{% block extra_css %}
+/* Reuse same tab/webcam styles from register_face */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    margin-bottom: 24px;
+    width: fit-content;
+}
+.tab-btn {
+    padding: 8px 20px;
+    border-radius: calc(var(--radius-md) - 2px);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.tab-btn.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.webcam-panel {
+    position: relative;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+#webcamVideo, #capturedPreview {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+}
+.webcam-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+}
+.webcam-placeholder i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.3;
+}
+.scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
+    animation: scanMove 2.5s linear infinite;
+    display: none;
+    pointer-events: none;
+}
+@keyframes scanMove { 0% { top:0%; } 100% { top:100%; } }
+.corner-marker {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--accent-2);
+    border-style: solid;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.corner-marker.tl { top:12px;  left:12px;  border-width: 2px 0 0 2px; }
+.corner-marker.tr { top:12px;  right:12px; border-width: 2px 2px 0 0; }
+.corner-marker.bl { bottom:12px; left:12px;  border-width: 0 0 2px 2px; }
+.corner-marker.br { bottom:12px; right:12px; border-width: 0 2px 2px 0; }
+.webcam-active .corner-marker { opacity: 1; }
+.webcam-active .scan-line     { display: block; }
+.webcam-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-base);
+}
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent-2);
+    background: rgba(183,148,244,0.05);
+}
+.drop-zone i {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 12px;
+    transition: var(--transition);
+}
+.drop-zone:hover i { color: var(--accent-2); }
+.drop-zone p { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
+.drop-zone .sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+#fileInput { display: none; }
+.image-preview {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+    display: none;
+    border: 1px solid var(--border);
+}
+.image-preview img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+.status-indicator {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+.status-indicator.loading {
+    display: flex;
+    background: rgba(183,148,244,0.08);
+    border: 1px solid rgba(183,148,244,0.2);
+    color: var(--accent-2);
+}
+.status-indicator.success {
+    display: flex;
+    background: rgba(104,211,145,0.08);
+    border: 1px solid rgba(104,211,145,0.2);
+    color: #68d391;
+}
+.status-indicator.error {
+    display: flex;
+    background: rgba(252,129,129,0.08);
+    border: 1px solid rgba(252,129,129,0.2);
+    color: #fc8181;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(183,148,244,0.2);
+    border-top-color: var(--accent-2);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+/* Result card (shown after webcam recognition) */
+.result-card {
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-top: 16px;
+    display: none;
+    border: 1px solid;
+}
+.result-card.matched {
+    background: rgba(104,211,145,0.07);
+    border-color: rgba(104,211,145,0.25);
+}
+.result-card.unknown {
+    background: rgba(252,129,129,0.07);
+    border-color: rgba(252,129,129,0.25);
+}
+.result-name {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.result-matched { color: #68d391; }
+.result-unknown { color: #fc8181; }
+.confidence-bar-wrap {
+    background: var(--bg-base);
+    border-radius: 100px;
+    height: 6px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+.confidence-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 1s ease;
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-title">
+        <i class="bi bi-person-check" style="color:var(--accent-2);"></i> Face Recognition
+    </div>
+    <div class="page-subtitle">
+        Upload or capture a face — the system will compare it against all registered encodings
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 300px; gap:20px; align-items:start;">
+
+    <!-- ── Left: Input Panel ───────────────────── -->
+    <div class="af-card">
+
+        <!-- Tab Switcher -->
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tabWebcam" onclick="switchTab('webcam')">
+                <i class="bi bi-camera-video"></i> Webcam
+            </button>
+            <button class="tab-btn" id="tabUpload" onclick="switchTab('upload')">
+                <i class="bi bi-upload"></i> Upload Image
+            </button>
+        </div>
+
+        <!-- ── WEBCAM PANEL ──────────────────── -->
+        <div id="panelWebcam">
+
+            <div class="webcam-panel" id="webcamContainer">
+                <div class="scan-line"></div>
+                <div class="corner-marker tl"></div>
+                <div class="corner-marker tr"></div>
+                <div class="corner-marker bl"></div>
+                <div class="corner-marker br"></div>
+
+                <video id="webcamVideo" autoplay playsinline style="display:none;"></video>
+                <img id="capturedPreview" style="display:none;" alt="Captured"/>
+
+                <div class="webcam-placeholder" id="webcamPlaceholder">
+                    <i class="bi bi-camera-video-off"></i>
+                    <p>Camera not started</p>
+                    <p style="font-size:0.78rem; margin-top:4px;">Click "Start Camera" below</p>
+                </div>
+            </div>
+
+            <div class="status-indicator" id="webcamStatus"></div>
+
+            <!-- Recognition result (webcam) -->
+            <div class="result-card" id="resultCard">
+                <div class="result-name" id="resultName"></div>
+                <div id="resultMsg" style="font-size:0.875rem; margin-bottom:10px;"></div>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">Confidence</div>
+                <div class="confidence-bar-wrap">
+                    <div class="confidence-bar-fill" id="confBar" style="width:0%"></div>
+                </div>
+                <div id="confLabel" style="font-size:0.82rem; color:var(--text-secondary);"></div>
+            </div>
+
+            <div class="webcam-controls" style="margin-top:14px;">
+                <button class="btn-af-secondary" id="btnStart" onclick="startWebcam()">
+                    <i class="bi bi-camera-video"></i> Start Camera
+                </button>
+                <button class="btn-af-primary" id="btnCapture" onclick="captureAndRecognize()" style="display:none; background:linear-gradient(135deg,var(--accent),var(--accent-2));">
+                    <i class="bi bi-search"></i> Capture & Recognize
+                </button>
+                <button class="btn-af-secondary" id="btnRetake" onclick="retakeWebcam()" style="display:none;">
+                    <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+                <button class="btn-af-danger" id="btnStop" onclick="stopWebcam()" style="display:none;">
+                    <i class="bi bi-stop-circle"></i> Stop
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ── UPLOAD PANEL ──────────────────── -->
+        <div id="panelUpload" style="display:none;">
+
+            <form method="POST" action="{{ url_for('face.recognize') }}" enctype="multipart/form-data">
+
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImg" src="" alt="Preview"/>
+                </div>
+
+                <div class="drop-zone" id="dropZone"
+                     onclick="document.getElementById('fileInput').click()"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    <i class="bi bi-person-bounding-box"></i>
+                    <p>Click to browse or drag & drop</p>
+                    <p class="sub">JPG, PNG — Single face photo</p>
+                </div>
+
+                <input type="file" id="fileInput" name="face_image"
+                       accept=".jpg,.jpeg,.png" onchange="previewFile(this)"/>
+
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn-af-primary" id="btnSubmit"
+                            style="display:none; background:linear-gradient(135deg,var(--accent),var(--accent-2));">
+                        <i class="bi bi-search"></i> Run Recognition
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+    <!-- ── Right: Info Panel ──────────────────── -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+        <div class="af-card">
+            <div class="af-card-title"><i class="bi bi-info-circle"></i> How Recognition Works</div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                {% for step, desc in [
+                    ("1. Encode", "Your uploaded face is converted to a 128-number vector"),
+                    ("2. Compare", "Compared against all registered face encodings in the database"),
+                    ("3. Distance", "Euclidean distance calculated — lower = better match"),
+                    ("4. Result", "Match found if distance is below the threshold (0.50)")
+                ] %}
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <div style="width:28px;height:28px;background:rgba(183,148,244,0.12);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:700;color:var(--accent-2);">
+                        {{ loop.index }}
+                    </div>
+                    <div>
+                        <div style="font-size:0.82rem;font-weight:500;color:var(--text-primary);">{{ step }}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">{{ desc }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="af-card">
+            <div class="af-card-title"><i class="bi bi-sliders"></i> Current Threshold</div>
+            <div style="text-align:center; padding: 8px 0;">
+                <div style="font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--accent-2);">0.50</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">Euclidean distance</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;">
+                    Lower value = stricter matching
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let stream = null;
+
+    function switchTab(tab) {
+        document.getElementById('panelWebcam').style.display = tab === 'webcam' ? 'block' : 'none';
+        document.getElementById('panelUpload').style.display = tab === 'upload' ? 'block' : 'none';
+        document.getElementById('tabWebcam').classList.toggle('active', tab === 'webcam');
+        document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+        if (tab === 'upload' && stream) stopWebcam();
+    }
+
+    async function startWebcam() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.getElementById('webcamVideo');
+            video.srcObject = stream;
+            video.style.display = 'block';
+            document.getElementById('webcamPlaceholder').style.display = 'none';
+            document.getElementById('capturedPreview').style.display   = 'none';
+            document.getElementById('webcamContainer').classList.add('webcam-active');
+            document.getElementById('btnStart').style.display   = 'none';
+            document.getElementById('btnCapture').style.display = 'inline-flex';
+            document.getElementById('btnStop').style.display    = 'inline-flex';
+            document.getElementById('btnRetake').style.display  = 'none';
+            document.getElementById('resultCard').style.display = 'none';
+            setStatus('webcamStatus', '', '');
+        } catch (err) {
+            setStatus('webcamStatus', 'error', '<i class="bi bi-exclamation-circle"></i> Camera access denied.');
+        }
+    }
+
+    function stopWebcam() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        document.getElementById('webcamVideo').style.display     = 'none';
+        document.getElementById('webcamPlaceholder').style.display = 'block';
+        document.getElementById('webcamContainer').classList.remove('webcam-active');
+        document.getElementById('btnStart').style.display   = 'inline-flex';
+        document.getElementById('btnCapture').style.display = 'none';
+        document.getElementById('btnStop').style.display    = 'none';
+        document.getElementById('btnRetake').style.display  = 'none';
+    }
+
+    function retakeWebcam() {
+        document.getElementById('capturedPreview').style.display = 'none';
+        document.getElementById('webcamVideo').style.display     = 'block';
+        document.getElementById('btnCapture').style.display = 'inline-flex';
+        document.getElementById('btnRetake').style.display  = 'none';
+        document.getElementById('resultCard').style.display = 'none';
+        setStatus('webcamStatus', '', '');
+    }
+
+    async function captureAndRecognize() {
+        const video  = document.getElementById('webcamVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg', 0.92);
+
+        const preview = document.getElementById('capturedPreview');
+        preview.src = imageData;
+        preview.style.display = 'block';
+        video.style.display   = 'none';
+        document.getElementById('btnCapture').style.display = 'none';
+        document.getElementById('btnRetake').style.display  = 'inline-flex';
+
+        setStatus('webcamStatus', 'loading', '<div class="spinner"></div> Running face recognition...');
+
+        try {
+            const response = await fetch("{{ url_for('face.recognize_webcam') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_data: imageData })
+            });
+            const result = await response.json();
+            setStatus('webcamStatus', '', '');
+            showResult(result);
+        } catch (err) {
+            setStatus('webcamStatus', 'error',
+                '<i class="bi bi-exclamation-circle"></i> Network error. Please try again.');
+        }
+    }
+
+    function showResult(result) {
+        const card = document.getElementById('resultCard');
+        card.style.display = 'block';
+
+        if (result.status === 'matched') {
+            card.className = 'result-card matched';
+            document.getElementById('resultName').innerHTML =
+                '<span class="result-matched"><i class="bi bi-check-circle-fill"></i> ' + result.user_name + '</span>';
+            document.getElementById('resultMsg').textContent = result.message;
+        } else {
+            card.className = 'result-card unknown';
+            document.getElementById('resultName').innerHTML =
+                '<span class="result-unknown"><i class="bi bi-x-circle-fill"></i> No Match Found</span>';
+            document.getElementById('resultMsg').textContent = result.message || 'Face not recognized in system.';
+        }
+
+        const conf = result.confidence || 0;
+        document.getElementById('confBar').style.width = conf + '%';
+        document.getElementById('confLabel').textContent = conf.toFixed(1) + '% confidence';
+    }
+
+    function setStatus(id, type, html) {
+        const el = document.getElementById(id);
+        el.className = 'status-indicator ' + type;
+        el.innerHTML = html;
+        el.style.display = type ? 'flex' : 'none';
+    }
+
+    function previewFile(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('dropZone').style.display     = 'none';
+                document.getElementById('btnSubmit').style.display    = 'inline-flex';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+    function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('dragover'); }
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            const input = document.getElementById('fileInput');
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            previewFile(input);
+        }
+    }
+</script>
+{% endblock %}

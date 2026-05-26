@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% block title %}Recognition Result{% endblock %}
+
+{% block extra_css %}
+
+/* ── Result Hero ──────────────────────── */
+.result-hero {
+    border-radius: var(--radius-xl);
+    padding: 40px;
+    text-align: center;
+    border: 1px solid;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.result-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-size: 30px 30px;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+}
+
+.result-hero.matched {
+    background: linear-gradient(135deg,
+        rgba(104,211,145,0.08) 0%,
+        rgba(139,92,246,0.06) 100%);
+    border-color: rgba(104,211,145,0.25);
+}
+
+.result-hero.unknown {
+    background: linear-gradient(135deg,
+        rgba(252,129,129,0.08) 0%,
+        rgba(183,148,244,0.06) 100%);
+    border-color: rgba(252,129,129,0.25);
+}
+
+.result-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.result-icon.matched {
+    background: rgba(104,211,145,0.15);
+    color: #68d391;
+    box-shadow: 0 0 30px rgba(104,211,145,0.2);
+}
+
+.result-icon.unknown {
+    background: rgba(252,129,129,0.15);
+    color: #fc8181;
+    box-shadow: 0 0 30px rgba(252,129,129,0.2);
+}
+
+.result-headline {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.result-headline.matched { color: #68d391; }
+.result-headline.unknown { color: #fc8181; }
+
+.result-subline {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Confidence Meter ─────────────────── */
+.conf-meter {
+    margin: 24px 0 0;
+    position: relative;
+    z-index: 1;
+}
+
+.conf-track {
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+    margin: 8px 0 6px;
+}
+
+.conf-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.conf-fill.matched {
+    background: linear-gradient(90deg, #8b5cf6, #14b8a6);
+}
+
+.conf-fill.unknown {
+    background: linear-gradient(90deg, #fc8181, #b794f4);
+}
+
+.conf-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.conf-value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+/* ── Detail Cards Grid ────────────────── */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.detail-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    transition: var(--transition);
+}
+
+.detail-item:hover {
+    border-color: var(--border-accent);
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.detail-value {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ── Image Preview ────────────────────── */
+.face-image-wrap {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    aspect-ratio: 4/3;
+}
+
+.face-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── Pulse animation for matched icon ─── */
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(104,211,145,0.2); }
+    50%       { box-shadow: 0 0 50px rgba(104,211,145,0.4); }
+}
+
+.result-icon.matched { animation: pulse 2s ease-in-out infinite; }
+
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <a href="{{ url_for('face.recognize') }}" class="btn-af-secondary" style="padding:8px 14px;">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <div class="page-title">Recognition Result</div>
+            <div class="page-subtitle">Face comparison completed</div>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 280px; gap:20px; align-items:start;">
+
+    <!-- ── Left: Main Result ───────────────────── -->
+    <div>
+
+        <!-- Result Hero Card -->
+        <div class="result-hero {{ result.status }}">
+
+            <div class="result-icon {{ result.status }}">
+                {% if result.status == 'matched' %}
+                    <i class="bi bi-person-check-fill"></i>
+                {% else %}
+                    <i class="bi bi-person-x-fill"></i>
+                {% endif %}
+            </div>
+
+            <div class="result-headline {{ result.status }}">
+                {% if result.status == 'matched' %}
+                    {{ result.user_name }}
+                {% else %}
+                    Unknown Person
+                {% endif %}
+            </div>
+
+            <div class="result-subline">
+                {% if result.status == 'matched' %}
+                    Face successfully matched in the system
+                {% else %}
+                    No matching face found in the database
+                {% endif %}
+            </div>
+
+            <!-- Confidence Meter -->
+            <div class="conf-meter">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em;">
+                    Match Confidence
+                </div>
+                <div class="conf-track">
+                    <div class="conf-fill {{ result.status }}"
+                         id="confFill"
+                         style="width: 0%"
+                         data-target="{{ result.confidence | default(0) }}">
+                    </div>
+                </div>
+                <div class="conf-labels">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                </div>
+                <div class="conf-value" style="color: {% if result.status == 'matched' %}#68d391{% else %}#fc8181{% endif %};">
+                    {{ "%.1f"|format(result.confidence | default(0)) }}%
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Detail Stats -->
+        <div class="detail-grid">
+
+            <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value" style="color: {% if result.status == 'matched' %}#68d391{% else %}#fc8181{% endif %}; text-transform:capitalize;">
+                    {{ result.status }}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Euclidean Distance</div>
+                <div class="detail-value">
+                    {% if result.distance is not none %}
+                        {{ "%.4f"|format(result.distance) }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Confidence Score</div>
+                <div class="detail-value">{{ "%.1f"|format(result.confidence | default(0)) }}%</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Threshold Used</div>
+                <div class="detail-value">0.50</div>
+            </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="{{ url_for('face.recognize') }}" class="btn-af-primary">
+                <i class="bi bi-arrow-repeat"></i> Try Another
+            </a>
+            <a href="{{ url_for('dashboard.analytics') }}" class="btn-af-secondary">
+                <i class="bi bi-bar-chart-line"></i> View Analytics
+            </a>
+            <a href="{{ url_for('dashboard.index') }}" class="btn-af-secondary">
+                <i class="bi bi-grid-1x2"></i> Dashboard
+            </a>
+        </div>
+
+    </div>
+
+    <!-- ── Right: Image + Info ─────────────────── -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+        <!-- Uploaded image preview -->
+        {% if image_path %}
+        <div class="af-card" style="padding:16px;">
+            <div class="af-card-title" style="margin-bottom:12px;">
+                <i class="bi bi-image"></i> Submitted Image
+            </div>
+            <div class="face-image-wrap">
+                <img src="{{ url_for('static', filename=image_path) }}"
+                     alt="Submitted face"
+                     onerror="this.parentElement.innerHTML='<div style=\'padding:40px;text-align:center;color:var(--text-muted);font-size:0.82rem;\'>Image not available</div>'"/>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Distance explanation -->
+        <div class="af-card">
+            <div class="af-card-title"><i class="bi bi-question-circle"></i> Score Guide</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;">
+                {% for range_label, color, desc in [
+                    ("0.00 – 0.30", "#68d391", "Strong match"),
+                    ("0.30 – 0.50", "#f6ad55", "Acceptable match"),
+                    ("0.50 – 0.70", "#fc8181", "Weak / no match"),
+                    ("0.70 +",      "#a0aec0", "Different person")
+                ] %}
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:{{ color }};flex-shrink:0;"></div>
+                    <span style="color:var(--text-muted); width:90px; flex-shrink:0;">{{ range_label }}</span>
+                    <span style="color:var(--text-secondary);">{{ desc }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+    
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animate the confidence bar on page load
+    window.addEventListener('load', () => {
+        const fill   = document.getElementById('confFill');
+        const target = parseFloat(fill.dataset.target) || 0;
+        setTimeout(() => { fill.style.width = target + '%'; }, 300);
+    });
+</script>
+{% endblock %}

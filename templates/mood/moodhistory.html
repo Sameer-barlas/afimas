@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}Mood History{% endblock %}
+
+{% block extra_css %}
+
+/* ── Emotion color map ────────────────── */
+.emo-happy    { color: #FFD93D; }
+.emo-sad      { color: #4D96FF; }
+.emo-angry    { color: #FF6B6B; }
+.emo-neutral  { color: var(--accent); }
+.emo-fear     { color: #C77DFF; }
+.emo-surprise { color: #FF9F43; }
+.emo-disgust  { color: #A8A8A8; }
+
+/* ── History cards grid ───────────────── */
+.history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.history-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.history-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.history-card.positive::before { background: linear-gradient(90deg,#FFD93D,#68d391); }
+.history-card.negative::before { background: linear-gradient(90deg,#FF6B6B,#C77DFF); }
+.history-card.neutral::before  { background: linear-gradient(90deg,var(--accent),var(--accent-2)); }
+
+.history-card:hover { border-color: var(--border-accent); transform: translateY(-2px); }
+.history-card:hover::before { opacity: 1; }
+
+.history-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.history-emoji { font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+
+.history-emotion {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.history-date {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Mini confidence bar */
+.mini-conf-track {
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    height: 5px;
+    overflow: hidden;
+    margin: 10px 0 6px;
+}
+
+.mini-conf-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+/* ── Filter bar ───────────────────────── */
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-transform: capitalize;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--accent-glow);
+    border-color: var(--border-accent);
+    color: var(--accent);
+}
+
+/* ── View toggle ──────────────────────── */
+.view-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+}
+
+.view-btn {
+    padding: 5px 10px;
+    border-radius: calc(var(--radius-sm) - 1px);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.view-btn.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+            <div class="page-title">
+                <i class="bi bi-clock-history" style="color:var(--accent-warn);"></i> Mood History
+            </div>
+            <div class="page-subtitle">
+                All your mood scans —
+                <strong style="color:var(--text-primary);">{{ mood_logs | length }}</strong>
+                total records
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <div class="view-toggle" id="viewToggle">
+                <button class="view-btn active" id="btnGrid"
+                        onclick="setView('grid')" title="Grid view">
+                    <i class="bi bi-grid"></i>
+                </button>
+                <button class="view-btn" id="btnList"
+                        onclick="setView('list')" title="List view">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+            </div>
+            <a href="{{ url_for('mood.scan') }}" class="btn-af-primary">
+                <i class="bi bi-plus-circle"></i> New Scan
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if mood_logs %}
+
+    <!-- ── Filter Bar ─────────────────────────────── -->
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterLogs('all', this)">
+            <i class="bi bi-grid-3x3-gap"></i> All ({{ mood_logs | length }})
+        </button>
+        <button class="filter-btn" onclick="filterLogs('positive', this)">
+            😊 Positive
+        </button>
+        <button class="filter-btn" onclick="filterLogs('negative', this)">
+            😢 Negative
+        </button>
+        <button class="filter-btn" onclick="filterLogs('neutral', this)">
+            😐 Neutral
+        </button>
+    </div>
+
+    <!-- ── GRID VIEW ──────────────────────────────── -->
+    <div class="history-grid" id="gridView">
+        {% for log in mood_logs %}
+        {% set cat = (log.mood_category or 'neutral') | lower %}
+        {% set emotion_emojis = {
+            'happy': '😊', 'sad': '😢', 'angry': '😠',
+            'neutral': '😐', 'fear': '😨', 'surprise': '😲', 'disgust': '🤢'
+        } %}
+        <div class="history-card {{ cat }}" data-category="{{ cat }}">
+
+            <div class="history-card-top">
+                <div>
+                    <div class="history-emoji">
+                        {{ emotion_emojis.get(log.dominant_emotion, '😐') }}
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <span class="badge-af badge-af
+                        {% if cat == 'positive' %}badge-positive
+                        {% elif cat == 'negative' %}badge-negative
+                        {% else %}badge-neutral{% endif %}"
+                        style="font-size:0.68rem;">
+                        {{ log.mood_category or 'Neutral' }}
+                    </span>
+                    <div class="history-date" style="margin-top:6px;">
+                        {{ log.created_at[:16] if log.created_at else '—' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-emotion emo-{{ log.dominant_emotion }}">
+                {{ log.dominant_emotion }}
+            </div>
+
+            <!-- Confidence bar -->
+            <div class="mini-conf-track">
+                <div class="mini-conf-fill"
+                     style="width: {{ '%.0f' | format(log.confidence * 100) }}%;"></div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">
+                Confidence: <strong style="color:var(--text-secondary);">
+                    {{ '%.1f' | format(log.confidence * 100) }}%
+                </strong>
+            </div>
+
+            <!-- Mini emotion breakdown -->
+            {% if log.all_scores %}
+            <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+                <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;
+                            letter-spacing:0.08em; margin-bottom:6px;">All Scores</div>
+                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                    {% for emo, score in log.all_scores.items() | sort(attribute='1', reverse=True) %}
+                    <span style="font-size:0.68rem; padding:2px 7px; border-radius:100px;
+                                 background:rgba(255,255,255,0.04); color:var(--text-muted);">
+                        {{ emo }}: {{ '%.0f'|format(score*100) }}%
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── LIST VIEW (hidden by default) ─────────── -->
+    <div id="listView" style="display:none;">
+        <div class="af-card" style="padding:0; overflow:hidden;">
+            <table class="af-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Emotion</th>
+                        <th>Category</th>
+                        <th>Confidence</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody">
+                    {% for log in mood_logs %}
+                    {% set cat = (log.mood_category or 'neutral') | lower %}
+                    <tr data-category="{{ cat }}">
+                        <td style="color:var(--text-muted); font-size:0.78rem;">{{ loop.index }}</td>
+                        <td>
+                            <span style="font-weight:500; text-transform:capitalize;
+                                         color:var(--text-primary);">
+                                {{ log.dominant_emotion }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-af
+                                {% if cat == 'positive' %}badge-positive
+                                {% elif cat == 'negative' %}badge-negative
+                                {% else %}badge-neutral{% endif %}">
+                                {{ log.mood_category or '—' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="flex:1; background:var(--bg-base); border-radius:100px;
+                                            height:4px; overflow:hidden; min-width:60px;">
+                                    <div style="height:100%; border-radius:100px;
+                                                background:var(--accent);
+                                                width:{{ '%.0f'|format(log.confidence*100) }}%;"></div>
+                                </div>
+                                <span style="font-size:0.8rem; color:var(--text-secondary); width:36px; text-align:right;">
+                                    {{ '%.0f'|format(log.confidence*100) }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td style="font-size:0.8rem; color:var(--text-muted);">
+                            {{ log.created_at[:16] if log.created_at else '—' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% else %}
+
+    <!-- Empty state -->
+    <div class="af-card">
+        <div class="empty-state" style="padding:60px 20px;">
+            <i class="bi bi-emoji-neutral float"></i>
+            <p style="font-size:1rem; color:var(--text-secondary); margin-bottom:20px;">
+                No mood scans recorded yet
+            </p>
+            <a href="{{ url_for('mood.scan') }}" class="btn-af-primary"
+               style="display:inline-flex;">
+                <i class="bi bi-emoji-smile"></i> Run Your First Mood Scan
+            </a>
+        </div>
+    </div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── View toggle (grid / list) ──────────────────
+    function setView(view) {
+        const grid = document.getElementById('gridView');
+        const list = document.getElementById('listView');
+        const btnG = document.getElementById('btnGrid');
+        const btnL = document.getElementById('btnList');
+
+        if (view === 'grid') {
+            grid.style.display = 'grid';
+            list.style.display = 'none';
+            btnG.classList.add('active');
+            btnL.classList.remove('active');
+        } else {
+            grid.style.display = 'none';
+            list.style.display = 'block';
+            btnG.classList.remove('active');
+            btnL.classList.add('active');
+        }
+        // Re-apply current filter
+        const activeFilter = document.querySelector('.filter-btn.active');
+        if (activeFilter) {
+            const cat = activeFilter.getAttribute('onclick').match(/'([^']+)'/)[1];
+            applyFilter(cat);
+        }
+    }
+
+    // ── Filter by mood category ────────────────────
+    function filterLogs(category, btn) {
+        // Update button states
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilter(category);
+    }
+
+    function applyFilter(category) {
+        // Filter grid cards
+        document.querySelectorAll('.history-card').forEach(card => {
+            const show = category === 'all' || card.dataset.category === category;
+            card.style.display = show ? 'block' : 'none';
+        });
+        // Filter list rows
+        document.querySelectorAll('#listBody tr').forEach(row => {
+            const show = category === 'all' || row.dataset.category === category;
+            row.style.display = show ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

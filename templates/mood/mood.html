@@ -1,0 +1,875 @@
+{% extends "base.html" %}
+{% block title %}Mood Scan{% endblock %}
+
+{% block extra_css %}
+
+/* ── Tab Bar ──────────────────────────── */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    margin-bottom: 24px;
+    width: fit-content;
+}
+.tab-btn {
+    padding: 8px 20px;
+    border-radius: calc(var(--radius-md) - 2px);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.tab-btn.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 10px 24px rgba(64,44,128,0.12);
+}
+
+.mood-scan-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 32px;
+    align-items: start;
+}
+
+.mood-work-card {
+    padding: 28px;
+}
+
+.mood-side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: sticky;
+    top: 24px;
+}
+
+.mood-side-panel .af-card {
+    padding: 26px;
+}
+
+.side-card-text {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 18px;
+}
+
+.emotion-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.emotion-chip {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.emotion-chip i {
+    color: var(--accent);
+}
+
+.emotion-chip::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-3));
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.10);
+    flex-shrink: 0;
+}
+
+.tip-list {
+    display: grid;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+.tip-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.tip-item i {
+    color: var(--accent-warn);
+    margin-top: 2px;
+}
+
+/* ── Webcam Panel ─────────────────────── */
+.webcam-panel {
+    position: relative;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    margin-bottom: 16px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.42);
+}
+#webcamVideo, #capturedPreview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+}
+.webcam-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+}
+.webcam-placeholder i {
+    font-size: 3rem; display: block;
+    margin-bottom: 12px; opacity: 0.3;
+}
+/* Mood scan uses yellow/warm scan line */
+.scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-warn), transparent);
+    animation: scanMove 2s linear infinite;
+    display: none;
+    pointer-events: none;
+}
+@keyframes scanMove { 0% { top:0%; } 100% { top:100%; } }
+.corner-marker {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--accent-warn);
+    border-style: solid;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.corner-marker.tl { top:12px;  left:12px;  border-width: 2px 0 0 2px; }
+.corner-marker.tr { top:12px;  right:12px; border-width: 2px 2px 0 0; }
+.corner-marker.bl { bottom:12px; left:12px;  border-width: 0 0 2px 2px; }
+.corner-marker.br { bottom:12px; right:12px; border-width: 0 2px 2px 0; }
+.webcam-active .corner-marker { opacity: 1; }
+.webcam-active .scan-line     { display: block; }
+.webcam-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Drop Zone ────────────────────────── */
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-base);
+}
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent-warn);
+    background: rgba(246,173,85,0.05);
+}
+.drop-zone i {
+    font-size: 2.5rem; color: var(--text-muted);
+    display: block; margin-bottom: 12px;
+    transition: var(--transition);
+}
+.drop-zone:hover i { color: var(--accent-warn); }
+.drop-zone p { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
+.drop-zone .sub { font-size:0.78rem; color:var(--text-muted); margin-top:6px; }
+#fileInput { display: none; }
+.image-preview {
+    border-radius: var(--radius-md); overflow: hidden;
+    margin-bottom: 16px; display: none;
+    border: 1px solid var(--border);
+}
+.image-preview img { width:100%; max-height:280px; object-fit:cover; display:block; }
+
+/* ── Status ───────────────────────────── */
+.status-indicator {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+.status-indicator.loading {
+    display: flex;
+    background: rgba(246,173,85,0.08);
+    border: 1px solid rgba(246,173,85,0.2);
+    color: var(--accent-warn);
+}
+.status-indicator.success {
+    display: flex;
+    background: rgba(104,211,145,0.08);
+    border: 1px solid rgba(104,211,145,0.2);
+    color: #68d391;
+}
+.status-indicator.error {
+    display: flex;
+    background: rgba(252,129,129,0.08);
+    border: 1px solid rgba(252,129,129,0.2);
+    color: #fc8181;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(246,173,85,0.2);
+    border-top-color: var(--accent-warn);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ── Mood Result Card ─────────────────── */
+.mood-result {
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    border: 1px solid;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.mood-result.positive {
+    background: linear-gradient(135deg, rgba(255,217,61,0.07), rgba(104,211,145,0.06));
+    border-color: rgba(255,217,61,0.25);
+}
+.mood-result.negative {
+    background: linear-gradient(135deg, rgba(252,129,129,0.07), rgba(183,148,244,0.06));
+    border-color: rgba(252,129,129,0.25);
+}
+.mood-result.neutral {
+    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(20,184,166,0.06));
+    border-color: rgba(139,92,246,0.25);
+}
+
+.mood-emoji {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.mood-name {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+}
+
+.mood-category-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.mood-category-badge.positive { background:rgba(104,211,145,0.15); color:#68d391; }
+.mood-category-badge.negative { background:rgba(252,129,129,0.15); color:#fc8181; }
+.mood-category-badge.neutral  { background:rgba(139,92,246,0.15);  color:var(--accent); }
+
+/* Emotion bars */
+.emotion-bars { display: flex; flex-direction: column; gap: 8px; }
+
+.emotion-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+}
+
+.emotion-label {
+    width: 70px;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+    font-weight: 500;
+}
+
+.emotion-track {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 100px;
+    height: 6px;
+    overflow: hidden;
+}
+
+.emotion-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1s ease;
+}
+
+.emotion-pct {
+    width: 36px;
+    text-align: right;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mood-guidance {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(139,92,246,0.10), rgba(6,182,212,0.08));
+    border: 1px solid rgba(139,92,246,0.18);
+}
+
+.mood-guidance-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.mood-guidance-summary {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 14px;
+}
+
+.mood-guidance-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mood-guidance-list li {
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.mood-guidance-list li::before {
+    content: "•";
+    color: var(--accent);
+    font-weight: 800;
+    margin-right: 8px;
+}
+
+/* Override the decorative bullet with a clean CSS dot. */
+.mood-guidance-list li::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: 8px;
+}
+
+@media (max-width: 1200px) {
+    .mood-scan-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .mood-side-panel {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .mood-work-card,
+    .mood-side-panel .af-card {
+        padding: 20px;
+    }
+
+    .tab-bar,
+    .webcam-controls {
+        width: 100%;
+    }
+
+    .tab-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 9px 12px;
+    }
+
+    .mood-side-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .mood-guidance-list {
+        grid-template-columns: 1fr;
+    }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-title">
+        <i class="bi bi-emoji-smile" style="color:var(--accent-warn);"></i> Mood Scan
+    </div>
+    <div class="page-subtitle">
+        Analyze your current emotion using AI - webcam or image upload
+    </div>
+</div>
+
+<!-- ── If result exists, show it first ──────────── -->
+{% if result %}
+<div class="mood-result {{ result.mood_category | lower if result.mood_category else 'neutral' }}"
+     id="resultSection">
+
+    <div style="display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap;">
+
+        <!-- Emoji + name -->
+        <div style="min-width:160px; text-align:center;">
+            <span class="mood-emoji">{{ result.emoji | default('😐') }}</span>
+            <div class="mood-name" style="color:
+                {% if result.mood_category == 'Positive' %}#FFD93D
+                {% elif result.mood_category == 'Negative' %}#fc8181
+                {% else %}var(--accent){% endif %};">
+                {{ result.dominant_emotion }}
+            </div>
+            <div class="mood-category-badge {{ result.mood_category | lower if result.mood_category else 'neutral' }}">
+                {{ result.mood_category }}
+            </div>
+            <div style="font-size:0.82rem;color:var(--text-muted);">
+                Confidence: <strong style="color:var(--text-primary);">
+                    {{ "%.1f"|format(result.confidence * 100) }}%
+                </strong>
+            </div>
+        </div>
+
+        <!-- Emotion breakdown bars -->
+        <div style="flex:1; min-width:200px;">
+            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:12px;font-weight:500;">
+                All Emotions
+            </div>
+            <div class="emotion-bars">
+                {% set emotion_colors = {
+                    'happy':    '#FFD93D',
+                    'neutral':  '#8b5cf6',
+                    'sad':      '#4D96FF',
+                    'angry':    '#FF6B6B',
+                    'fear':     '#C77DFF',
+                    'surprise': '#FF9F43',
+                    'disgust':  '#A8A8A8'
+                } %}
+                {% if result.all_scores %}
+                    {% for emotion, score in result.all_scores.items() | sort(attribute='1', reverse=True) %}
+                    <div class="emotion-row">
+                        <span class="emotion-label">{{ emotion }}</span>
+                        <div class="emotion-track">
+                            <div class="emotion-fill"
+                                 style="width: {{ (score * 100) | round(1) }}%;
+                                        background: {{ emotion_colors.get(emotion, '#8b5cf6') }};">
+                            </div>
+                        </div>
+                        <span class="emotion-pct">{{ "%.0f"|format(score * 100) }}%</span>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    {% if result.guidance %}
+    <div class="mood-guidance">
+        <div class="mood-guidance-title">
+            <i class="bi bi-compass"></i>
+            {{ result.guidance.headline }}
+        </div>
+        <div class="mood-guidance-summary">
+            {{ result.guidance.summary }}
+        </div>
+        <ul class="mood-guidance-list">
+            {% for suggestion in result.guidance.suggestions %}
+            <li>{{ suggestion }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Actions after result -->
+    <div style="display:flex; gap:10px; margin-top:20px; padding-top:18px; border-top:1px solid rgba(255,255,255,0.06); flex-wrap:wrap;">
+        <a href="{{ url_for('mood.scan') }}" class="btn-af-primary"
+           style="background:linear-gradient(135deg,var(--accent-warn),#e67e22);">
+            <i class="bi bi-arrow-repeat"></i> Scan Again
+        </a>
+        <a href="{{ url_for('mood.history') }}" class="btn-af-secondary">
+            <i class="bi bi-clock-history"></i> View History
+        </a>
+        <a href="{{ url_for('dashboard.analytics') }}" class="btn-af-secondary">
+            <i class="bi bi-bar-chart-line"></i> Analytics
+        </a>
+    </div>
+
+</div>
+{% endif %}
+
+<!-- ── Scan Panel ────────────────────────────────── -->
+<div class="mood-scan-layout">
+
+    <div class="af-card mood-work-card">
+
+        <!-- Tab Switcher -->
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tabWebcam" onclick="switchTab('webcam')">
+                <i class="bi bi-camera-video"></i> Webcam
+            </button>
+            <button class="tab-btn" id="tabUpload" onclick="switchTab('upload')">
+                <i class="bi bi-upload"></i> Upload Image
+            </button>
+        </div>
+
+        <!-- ── WEBCAM PANEL ──────────────────── -->
+        <div id="panelWebcam">
+
+            <div class="webcam-panel" id="webcamContainer">
+                <div class="scan-line"></div>
+                <div class="corner-marker tl"></div>
+                <div class="corner-marker tr"></div>
+                <div class="corner-marker bl"></div>
+                <div class="corner-marker br"></div>
+
+                <video id="webcamVideo" autoplay playsinline style="display:none;"></video>
+                <img id="capturedPreview" style="display:none;" alt="Captured"/>
+
+                <div class="webcam-placeholder" id="webcamPlaceholder">
+                    <i class="bi bi-emoji-smile"></i>
+                    <p>Camera not started</p>
+                    <p style="font-size:0.78rem;margin-top:4px;">
+                        Click "Start Camera" to begin mood scan
+                    </p>
+                </div>
+            </div>
+
+            <div class="status-indicator" id="webcamStatus"></div>
+
+            <!-- Webcam result (inline) -->
+            <div id="webcamResult" style="display:none; margin-top:14px; padding:16px;
+                 background:var(--bg-base); border:1px solid var(--border); border-radius:var(--radius-md);">
+                <div id="webcamResultContent"></div>
+            </div>
+
+            <div class="webcam-controls" style="margin-top:14px;">
+                <button class="btn-af-secondary" id="btnStart" onclick="startWebcam()">
+                    <i class="bi bi-camera-video"></i> Start Camera
+                </button>
+                <button class="btn-af-primary" id="btnCapture" onclick="captureAndScan()"
+                        style="display:none; background:linear-gradient(135deg,var(--accent-warn),#e67e22);">
+                    <i class="bi bi-emoji-smile"></i> Capture & Scan
+                </button>
+                <button class="btn-af-secondary" id="btnRetake" onclick="retakeWebcam()" style="display:none;">
+                    <i class="bi bi-arrow-repeat"></i> Retake
+                </button>
+                <button class="btn-af-danger" id="btnStop" onclick="stopWebcam()" style="display:none;">
+                    <i class="bi bi-stop-circle"></i> Stop
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ── UPLOAD PANEL ──────────────────── -->
+        <div id="panelUpload" style="display:none;">
+
+            <form method="POST" action="{{ url_for('mood.scan_upload') }}" enctype="multipart/form-data">
+
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImg" src="" alt="Preview"/>
+                </div>
+
+                <div class="drop-zone" id="dropZone"
+                     onclick="document.getElementById('fileInput').click()"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    <i class="bi bi-emoji-laughing"></i>
+                    <p>Click to browse or drag & drop your photo</p>
+                    <p class="sub">JPG, PNG - clear face photo for best results</p>
+                </div>
+
+                <input type="file" id="fileInput" name="mood_image"
+                       accept=".jpg,.jpeg,.png" onchange="previewFile(this)"/>
+
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn-af-primary" id="btnSubmit"
+                            style="display:none; background:linear-gradient(135deg,var(--accent-warn),#e67e22);">
+                        <i class="bi bi-emoji-smile"></i> Analyze Mood
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+    <!-- ── Right: Info Panel ──────────────────── -->
+    <div class="mood-side-panel">
+
+        <!-- Emotions detected -->
+        <div class="af-card">
+            <div class="af-card-title"><i class="bi bi-palette"></i> Detectable Emotions</div>
+            <div class="emotion-chip-grid">
+                {% for emoji, label in [
+                    ('😊','Happy'), ('😢','Sad'), ('😠','Angry'),
+                    ('😐','Neutral'), ('😨','Fear'), ('😲','Surprise'), ('🤢','Disgust')
+                ] %}
+                <div class="emotion-chip">
+                    <span>{{ label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- History shortcut -->
+        <div class="af-card">
+            <div class="af-card-title"><i class="bi bi-clock-history"></i> Scan History</div>
+            <div class="side-card-text">
+                View all your past mood scans and emotion trends.
+            </div>
+            <a href="{{ url_for('mood.history') }}" class="btn-af-secondary" style="width:100%;justify-content:center;">
+                <i class="bi bi-clock-history"></i> View History
+            </a>
+        </div>
+
+        <!-- Tips -->
+        <div class="af-card">
+            <div class="af-card-title"><i class="bi bi-lightbulb"></i> Tips</div>
+            <div class="tip-list">
+                <div class="tip-item"><i class="bi bi-check2-circle"></i><span>Face the camera directly for best results.</span></div>
+                <div class="tip-item"><i class="bi bi-check2-circle"></i><span>Use clear lighting so the model can read expressions accurately.</span></div>
+                <div class="tip-item"><i class="bi bi-check2-circle"></i><span>Choose a simple background to improve face detection.</span></div>
+                <div class="tip-item"><i class="bi bi-check2-circle"></i><span>Run multiple scans when you want stronger mood trends.</span></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let stream = null;
+
+    function switchTab(tab) {
+        document.getElementById('panelWebcam').style.display = tab === 'webcam' ? 'block' : 'none';
+        document.getElementById('panelUpload').style.display = tab === 'upload' ? 'block' : 'none';
+        document.getElementById('tabWebcam').classList.toggle('active', tab === 'webcam');
+        document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+        if (tab === 'upload' && stream) stopWebcam();
+    }
+
+    async function startWebcam() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.getElementById('webcamVideo');
+            video.srcObject = stream;
+            video.style.display = 'block';
+            document.getElementById('webcamPlaceholder').style.display = 'none';
+            document.getElementById('capturedPreview').style.display   = 'none';
+            document.getElementById('webcamContainer').classList.add('webcam-active');
+            document.getElementById('btnStart').style.display   = 'none';
+            document.getElementById('btnCapture').style.display = 'inline-flex';
+            document.getElementById('btnStop').style.display    = 'inline-flex';
+            document.getElementById('btnRetake').style.display  = 'none';
+            document.getElementById('webcamResult').style.display = 'none';
+            setStatus('webcamStatus', '', '');
+        } catch (err) {
+            setStatus('webcamStatus', 'error', '<i class="bi bi-exclamation-circle"></i> Camera access denied.');
+        }
+    }
+
+    function stopWebcam() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        document.getElementById('webcamVideo').style.display      = 'none';
+        document.getElementById('capturedPreview').style.display   = 'none';
+        document.getElementById('webcamPlaceholder').style.display = 'flex';
+        document.getElementById('webcamContainer').classList.remove('webcam-active');
+        document.getElementById('btnStart').style.display   = 'inline-flex';
+        document.getElementById('btnCapture').style.display = 'none';
+        document.getElementById('btnStop').style.display    = 'none';
+        document.getElementById('btnRetake').style.display  = 'none';
+    }
+
+    function retakeWebcam() {
+        document.getElementById('capturedPreview').style.display = 'none';
+        document.getElementById('webcamVideo').style.display     = 'block';
+        document.getElementById('webcamPlaceholder').style.display = 'none';
+        document.getElementById('btnCapture').style.display = 'inline-flex';
+        document.getElementById('btnRetake').style.display  = 'none';
+        document.getElementById('webcamResult').style.display = 'none';
+        setStatus('webcamStatus', '', '');
+    }
+
+    async function captureAndScan() {
+        const video  = document.getElementById('webcamVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg', 0.92);
+
+        const preview = document.getElementById('capturedPreview');
+        preview.src = imageData;
+        preview.style.display = 'block';
+        video.style.display   = 'none';
+        document.getElementById('webcamPlaceholder').style.display = 'none';
+        document.getElementById('btnCapture').style.display = 'none';
+        document.getElementById('btnRetake').style.display  = 'inline-flex';
+
+        setStatus('webcamStatus', 'loading', '<div class="spinner"></div> Analyzing your emotion...');
+
+        try {
+            const response = await fetch("{{ url_for('mood.scan_webcam') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_data: imageData })
+            });
+            const result = await response.json();
+            setStatus('webcamStatus', '', '');
+
+            if (result.success) {
+                showWebcamResult(result);
+            } else {
+                setStatus('webcamStatus', 'error',
+                    '<i class="bi bi-exclamation-circle"></i> ' + result.message);
+            }
+        } catch (err) {
+            setStatus('webcamStatus', 'error',
+                '<i class="bi bi-exclamation-circle"></i> Network error. Please try again.');
+        }
+    }
+
+    function showWebcamResult(result) {
+        const wrap = document.getElementById('webcamResult');
+        const conf = (result.confidence * 100).toFixed(1);
+        const guidance = result.guidance || {};
+        const suggestions = (guidance.suggestions || [])
+            .map(item => `<li>${escapeHtml(item)}</li>`)
+            .join('');
+        wrap.style.display = 'block';
+        document.getElementById('webcamResultContent').innerHTML = `
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="font-size:2.5rem;line-height:1;">${result.emoji || '😐'}</div>
+                <div>
+                    <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;text-transform:capitalize;color:var(--text-primary);">
+                        ${result.dominant_emotion}
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">
+                        ${result.mood_category} &bull; ${conf}% confidence
+                    </div>
+                </div>
+                <div style="margin-left:auto;">
+                    <span style="padding:4px 12px;border-radius:100px;font-size:0.75rem;font-weight:500;
+                          background:${result.mood_category === 'Positive' ? 'rgba(104,211,145,0.12)' :
+                                       result.mood_category === 'Negative' ? 'rgba(252,129,129,0.12)' :
+                                       'rgba(139,92,246,0.12)'};
+                          color:${result.mood_category === 'Positive' ? '#68d391' :
+                                  result.mood_category === 'Negative' ? '#fc8181' :
+                                  'var(--accent)'};">
+                        Saved
+                    </span>
+                </div>
+            </div>
+            ${guidance.headline ? `
+            <div class="mood-guidance" style="margin-top:16px;">
+                <div class="mood-guidance-title">
+                    <i class="bi bi-compass"></i> ${escapeHtml(guidance.headline)}
+                </div>
+                <div class="mood-guidance-summary">${escapeHtml(guidance.summary || '')}</div>
+                <ul class="mood-guidance-list">${suggestions}</ul>
+            </div>` : ''}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function setStatus(id, type, html) {
+        const el = document.getElementById(id);
+        el.className = 'status-indicator ' + type;
+        el.innerHTML = html;
+        el.style.display = type ? 'flex' : 'none';
+    }
+
+    function previewFile(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('dropZone').style.display     = 'none';
+                document.getElementById('btnSubmit').style.display    = 'inline-flex';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function handleDragOver(e)  { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+    function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('dragover'); }
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            const input = document.getElementById('fileInput');
+            const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+            previewFile(input);
+        }
+    }
+
+    // Auto-scroll to result if it exists
+    {% if result %}
+    window.addEventListener('load', () => {
+        document.getElementById('resultSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    {% endif %}
+</script>
+{% endblock %}
