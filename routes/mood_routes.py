@@ -21,6 +21,11 @@ from services.emotion_service import (
     analyze_emotion_from_path,
     analyze_emotion_from_base64
 )
+from services.mood_transform_service import (
+    get_target_moods,
+    transform_mood_from_path,
+    transform_mood_from_base64
+)
 from services.face_service    import save_uploaded_image, allowed_file
 from repositories.mood_repo   import (
     save_mood_log,
@@ -165,8 +170,122 @@ def scan_webcam():
 
 
 # ─────────────────────────────────────────────
-#  MOOD HISTORY PAGE
+#  MOOD TRANSFORM DEMO
 # ─────────────────────────────────────────────
+
+@bp.route("/transform", methods=["GET"])
+@login_required
+def transform():
+    """
+    Shows the local OpenCV landmark-style mood transformation demo.
+    This is separate from the stronger Kaggle model experiment.
+    """
+    user = get_current_user()
+    selected_mood = (request.args.get("target_mood") or "happy").lower()
+    valid_moods = {mood["key"] for mood in get_target_moods()}
+
+    if selected_mood not in valid_moods:
+        selected_mood = "happy"
+
+    return render_template(
+        "mood/transform.html",
+        user=user,
+        target_moods=get_target_moods(),
+        selected_mood=selected_mood,
+        result=None,
+        original_image=None,
+        original_image_path=None,
+        transformed_image=None,
+        transformed_image_path=None,
+        timestamp=None
+    )
+
+
+@bp.route("/transform/upload", methods=["POST"])
+@login_required
+def transform_upload():
+    """
+    Handles uploaded image transformation for the local demo.
+    Original and transformed images are stored in mood_transformations.
+    """
+    target_mood = (request.form.get("target_mood") or "happy").lower()
+
+    if "transform_image" not in request.files:
+        flash("No image file provided.", "warning")
+        return redirect(url_for("mood.transform", target_mood=target_mood))
+
+    file = request.files["transform_image"]
+
+    if file.filename == "":
+        flash("No file selected. Please choose an image.", "warning")
+        return redirect(url_for("mood.transform", target_mood=target_mood))
+
+    if not allowed_file(file.filename):
+        flash("Invalid file type. Please upload a JPG or PNG image.", "danger")
+        return redirect(url_for("mood.transform", target_mood=target_mood))
+
+    saved_path, relative_path = save_uploaded_image(
+        file,
+        folder=Config.MOOD_TRANSFORM_FOLDER
+    )
+
+    if not saved_path:
+        flash("Failed to save the image. Please try again.", "danger")
+        return redirect(url_for("mood.transform", target_mood=target_mood))
+
+    result = transform_mood_from_path(
+        saved_path,
+        target_mood,
+        output_folder=Config.MOOD_TRANSFORM_FOLDER
+    )
+
+    return render_template(
+        "mood/transform.html",
+        user=get_current_user(),
+        target_moods=get_target_moods(),
+        selected_mood=result.get("selected_mood") or target_mood,
+        result=result,
+        original_image=relative_path,
+        original_image_path=relative_path,
+        transformed_image=result.get("transformed_image"),
+        transformed_image_path=result.get("transformed_image_path"),
+        timestamp=result.get("timestamp")
+    )
+
+
+@bp.route("/transform/webcam", methods=["POST"])
+@login_required
+def transform_webcam():
+    """
+    Handles webcam capture transformation for the local demo.
+    Returns JSON so transform.html can update the result panel.
+    """
+    data = request.get_json(silent=True) or {}
+    image_data = data.get("image_data")
+    target_mood = (data.get("target_mood") or "happy").lower()
+
+    if not image_data:
+        return jsonify({
+            "success": False,
+            "message": "No image data received from webcam.",
+            "selected_mood": target_mood,
+            "target_mood": target_mood
+        }), 400
+
+    result, saved_path, relative_path = transform_mood_from_base64(
+        image_data,
+        target_mood,
+        output_folder=Config.MOOD_TRANSFORM_FOLDER
+    )
+
+    if relative_path and "original_image" not in result:
+        result["original_image"] = relative_path
+        result["original_image_path"] = relative_path
+
+    return jsonify(result), 200 if result.get("success") else 422
+
+
+#  MOOD HISTORY PAGE
 
 @bp.route("/history", methods=["GET"])
 @login_required

@@ -112,8 +112,8 @@ def initialize_database():
     conn.commit()
     conn.close()
 
-    print("✅ Database initialized successfully.")
-    print(f"📁 Location: {Config.DATABASE_PATH}")
+    print("[database] Database initialized successfully.")
+    print(f"[database] Location: {Config.DATABASE_PATH}")
 
 
 # ─────────────────────────────────────────────

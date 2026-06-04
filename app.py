@@ -112,17 +112,17 @@ def initialize_app():
         1. Creates the database and all tables (safe if already exists)
         2. Creates upload/mood_captures folders (safe if already exists)
     """
-    print("─" * 45)
-    print("  AFIMAS — AI Face & Mood Analysis System")
-    print("─" * 45)
+    print("-" * 45)
+    print("  AFIMAS - AI Face & Mood Analysis System")
+    print("-" * 45)
 
     # Initialize database tables
     initialize_database()
 
     # Create upload folders if missing
     create_upload_folders()
-    print("✅ Upload folders ready.")
-    print("─" * 45)
+    print("[app] Upload folders ready.")
+    print("-" * 45)
 
 
 # ─────────────────────────────────────────────

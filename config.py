@@ -42,6 +42,9 @@ class Config:
     # Where mood scan capture images are saved
     MOOD_CAPTURE_FOLDER = os.path.join(BASE_DIR, "static", "mood_captures")
 
+    # Where mood transformation source/output images are saved
+    MOOD_TRANSFORM_FOLDER = os.path.join(BASE_DIR, "static", "mood_transformations")
+
     # Where age prediction images are saved
     AGE_CAPTURE_FOLDER = os.path.join(BASE_DIR, "static", "age_predictions")
 
@@ -65,4 +68,5 @@ def create_upload_folders():
     """
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
     os.makedirs(Config.MOOD_CAPTURE_FOLDER, exist_ok=True)
+    os.makedirs(Config.MOOD_TRANSFORM_FOLDER, exist_ok=True)
     os.makedirs(Config.AGE_CAPTURE_FOLDER, exist_ok=True)

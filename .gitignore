@@ -19,6 +19,11 @@ node_modules/
 static/uploads/
 static/mood_captures/
 static/age_predictions/
+static/mood_transformations/
+
+# Local Flask run logs
+flask_server.out
+flask_server.err
 
 # OS junk
 .DS_Store

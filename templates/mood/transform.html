@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% block title %}Mood Transform{% endblock %}
+
+{% block content %}
+{% set current_mood = selected_mood or 'happy' %}
+{% set display_original = original_image or original_image_path %}
+{% set display_transformed = transformed_image or transformed_image_path %}
+{% set cache_timestamp = timestamp or (result.timestamp if result else '') %}
+<div class="space-y-7">
+    <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card backdrop-blur-xl md:p-8">
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-rose-600">
+                <i class="bi bi-magic"></i>
+                Facial Mood Transformation Engine
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-end">
+                <div>
+                    <h1 class="font-display text-4xl font-extrabold leading-tight text-af-text md:text-5xl">
+                        Transform a face expression
+                    </h1>
+                    <p class="mt-4 max-w-3xl text-base leading-7 text-af-secondary">
+                        Upload or capture a face, select a target mood, and AFIMAS will run the local OpenCV landmark-style demo transform.
+                    </p>
+                </div>
+
+                <div class="rounded-3xl border border-af-border bg-gradient-to-br from-rose-50 to-af-base p-5">
+                    <div class="text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Available targets</div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        {% for mood in target_moods %}
+                        <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-af-secondary">
+                            <i class="bi {{ mood.icon }} text-rose-500"></i>
+                            {{ mood.label }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="rounded-[28px] border border-af-border bg-af-text p-6 text-white shadow-af-card">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-display text-2xl font-extrabold">Local demo edits</h2>
+                    <p class="mt-1 text-sm text-white/60">OpenCV + lightweight landmarks</p>
+                </div>
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-xl text-rose-300">
+                    <i class="bi bi-cpu"></i>
+                </div>
+            </div>
+
+            <div class="mt-6 space-y-3">
+                {% for mood in target_moods %}
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div class="flex items-center gap-2 font-bold">
+                        <i class="bi {{ mood.icon }} text-rose-300"></i>
+                        {{ mood.label }}
+                    </div>
+                    <div class="mt-1 text-sm text-white/60">{{ mood.detail }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </section>
+
+    <section class="grid items-start gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
+        <div class="space-y-4">
+            <div class="inline-flex rounded-2xl border border-af-border bg-white/80 p-1 shadow-sm">
+                <button type="button" id="transformUploadTab" class="rounded-xl bg-af-accent px-4 py-2 text-sm font-bold text-white" onclick="switchTransformInput('upload')">
+                    <i class="bi bi-upload"></i> Upload
+                </button>
+                <button type="button" id="transformWebcamTab" class="rounded-xl px-4 py-2 text-sm font-bold text-af-secondary" onclick="switchTransformInput('webcam')">
+                    <i class="bi bi-camera-video"></i> Webcam
+                </button>
+            </div>
+
+            <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
+                <div class="mb-5">
+                    <h2 class="font-display text-2xl font-extrabold text-af-text">Target mood</h2>
+                    <p class="mt-1 text-sm text-af-muted">Choose one expression style before processing.</p>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-3" id="targetMoodPicker">
+                    {% for mood in target_moods %}
+                    <button type="button"
+                            data-mood-choice="{{ mood.key }}"
+                            class="group rounded-2xl border px-4 py-4 text-left transition {% if current_mood == mood.key %}border-rose-300 bg-rose-50 text-rose-600{% else %}border-af-border bg-white text-af-secondary hover:border-rose-200 hover:bg-rose-50/60{% endif %}"
+                            onclick="setTargetMood('{{ mood.key }}')">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-rose-500/10 text-xl text-rose-500">
+                                <i class="bi {{ mood.icon }}"></i>
+                            </div>
+                            <i class="bi bi-check-circle-fill opacity-0 transition group-[.is-active]:opacity-100"></i>
+                        </div>
+                        <div class="mt-4 font-display text-xl font-extrabold">{{ mood.label }}</div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="transformUploadPanel">
+                <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
+                    <div class="mb-5">
+                        <h2 class="font-display text-2xl font-extrabold text-af-text">Upload image</h2>
+                        <p class="mt-1 text-sm text-af-muted">JPG or PNG with one clear front-facing face.</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('mood.transform_upload') }}" enctype="multipart/form-data" class="space-y-5">
+                        <input type="hidden" id="uploadTargetMood" name="target_mood" value="{{ current_mood }}">
+
+                        <label for="transformImageInput" class="flex min-h-72 cursor-pointer flex-col items-center justify-center rounded-[24px] border-2 border-dashed border-af-border-accent bg-af-base/50 p-8 text-center transition hover:bg-af-accent/5">
+                            <div class="grid h-16 w-16 place-items-center rounded-3xl bg-rose-500/10 text-3xl text-rose-600">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                            </div>
+                            <div class="mt-4 font-display text-2xl font-extrabold text-af-text">Choose a face image</div>
+                            <input id="transformImageInput" name="transform_image" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden" onchange="previewTransformImage(this)" required>
+                        </label>
+
+                        <div id="transformPreviewWrap" class="{% if original_image_path %}block{% else %}hidden{% endif %} overflow-hidden rounded-3xl border border-af-border bg-white">
+                            <img id="transformPreviewImg"
+                                 src="{% if display_original %}{{ url_for('static', filename=display_original, v=cache_timestamp) }}{% endif %}"
+                                 alt="Selected mood transformation image"
+                                 class="max-h-[360px] w-full object-contain bg-af-base">
+                        </div>
+
+                        <button type="submit" class="btn-af-primary bg-gradient-to-br from-rose-500 to-af-accent">
+                            <i class="bi bi-magic"></i> Transform Mood
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="transformWebcamPanel" class="hidden">
+                <div class="rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card">
+                    <div class="mb-5">
+                        <h2 class="font-display text-2xl font-extrabold text-af-text">Use webcam</h2>
+                        <p class="mt-1 text-sm text-af-muted">Capture a live frame and transform it with the selected target mood.</p>
+                    </div>
+
+                    <div class="relative flex min-h-[340px] items-center justify-center overflow-hidden rounded-[24px] border border-af-border bg-af-text">
+                        <video id="transformVideo" autoplay playsinline class="hidden h-full max-h-[420px] w-full object-cover"></video>
+                        <img id="transformWebcamPreview" alt="Captured webcam frame" class="hidden h-full max-h-[420px] w-full object-contain bg-af-text">
+                        <div id="transformCameraPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-white">
+                            <div class="grid h-16 w-16 place-items-center rounded-3xl bg-white/10 text-3xl text-rose-300">
+                                <i class="bi bi-camera-video"></i>
+                            </div>
+                            <div class="mt-4 font-display text-2xl font-extrabold">Camera capture</div>
+                        </div>
+                    </div>
+
+                    <div id="transformWebcamStatus" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+
+                    <div class="mt-5 flex flex-wrap gap-3">
+                        <button type="button" id="transformStart" class="btn-af-secondary" onclick="startTransformWebcam()">
+                            <i class="bi bi-camera-video"></i> Start Camera
+                        </button>
+                        <button type="button" id="transformCapture" class="btn-af-primary hidden bg-gradient-to-br from-rose-500 to-af-accent" onclick="captureTransformWebcam()">
+                            <i class="bi bi-camera"></i> Capture & Transform
+                        </button>
+                        <button type="button" id="transformRetake" class="btn-af-secondary hidden" onclick="retakeTransformWebcam()">
+                            <i class="bi bi-arrow-repeat"></i> Retake
+                        </button>
+                        <button type="button" id="transformStop" class="btn-af-danger hidden" onclick="stopTransformWebcam()">
+                            <i class="bi bi-x-circle"></i> Stop
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sticky top-6 rounded-[28px] border border-af-border bg-white/90 p-6 shadow-af-card max-xl:static">
+            <div class="mb-5 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-display text-2xl font-extrabold text-af-text">Transformation result</h2>
+                    <p class="mt-1 text-sm text-af-muted">Original and transformed image output</p>
+                </div>
+                <div class="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-xl text-rose-600">
+                    <i class="bi bi-images"></i>
+                </div>
+            </div>
+
+            <div id="transformResultContent">
+                {% if result and result.success %}
+                <div class="space-y-4">
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                        <div class="overflow-hidden rounded-3xl border border-af-border bg-af-base">
+                            <div class="border-b border-af-border bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Original</div>
+                            <img src="{{ url_for('static', filename=display_original, v=cache_timestamp) }}" alt="Original face" class="h-80 w-full object-contain">
+                        </div>
+                        <div class="overflow-hidden rounded-3xl border border-rose-200 bg-rose-50">
+                            <div class="border-b border-rose-100 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-rose-600">Transformed</div>
+                            <img src="{{ url_for('static', filename=display_transformed, v=cache_timestamp) }}" alt="Transformed face" class="h-80 w-full object-contain">
+                        </div>
+                    </div>
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold capitalize text-emerald-600">
+                        <i class="bi bi-check-circle"></i>
+                        Target mood: {{ selected_mood or result.selected_mood or result.target_mood }}
+                    </div>
+                </div>
+                {% elif result %}
+                <div class="rounded-[26px] border border-red-200 bg-red-50 p-6 text-red-600">
+                    <div class="mb-2 font-bold">Transformation failed</div>
+                    <p class="m-0 text-sm leading-6">{{ result.message }}</p>
+                </div>
+                {% else %}
+                <div class="empty-state rounded-[26px] border border-af-border bg-af-base/50">
+                    <i class="bi bi-magic mb-3 block text-4xl opacity-40"></i>
+                    <p>Upload an image or use webcam to see the transformed expression here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedTransformMood = "{{ current_mood }}";
+let transformStream = null;
+
+function setTargetMood(mood) {
+    selectedTransformMood = mood;
+    document.getElementById('uploadTargetMood').value = mood;
+    document.querySelectorAll('[data-mood-choice]').forEach(button => {
+        const active = button.dataset.moodChoice === mood;
+        button.classList.toggle('is-active', active);
+        button.classList.toggle('border-rose-300', active);
+        button.classList.toggle('bg-rose-50', active);
+        button.classList.toggle('text-rose-600', active);
+        button.classList.toggle('border-af-border', !active);
+        button.classList.toggle('bg-white', !active);
+        button.classList.toggle('text-af-secondary', !active);
+    });
+}
+
+function switchTransformInput(tab) {
+    const uploadPanel = document.getElementById('transformUploadPanel');
+    const webcamPanel = document.getElementById('transformWebcamPanel');
+    const uploadTab = document.getElementById('transformUploadTab');
+    const webcamTab = document.getElementById('transformWebcamTab');
+
+    uploadPanel.classList.toggle('hidden', tab !== 'upload');
+    webcamPanel.classList.toggle('hidden', tab !== 'webcam');
+
+    uploadTab.className = tab === 'upload'
+        ? 'rounded-xl bg-af-accent px-4 py-2 text-sm font-bold text-white'
+        : 'rounded-xl px-4 py-2 text-sm font-bold text-af-secondary';
+    webcamTab.className = tab === 'webcam'
+        ? 'rounded-xl bg-af-accent px-4 py-2 text-sm font-bold text-white'
+        : 'rounded-xl px-4 py-2 text-sm font-bold text-af-secondary';
+
+    if (tab === 'upload') stopTransformWebcam();
+}
+
+function previewTransformImage(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const previewWrap = document.getElementById('transformPreviewWrap');
+    const previewImg = document.getElementById('transformPreviewImg');
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+        previewImg.src = event.target.result;
+        previewWrap.classList.remove('hidden');
+        previewWrap.classList.add('block');
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function setTransformStatus(type, message) {
+    const el = document.getElementById('transformWebcamStatus');
+    el.className = 'mt-4 rounded-2xl border px-4 py-3 text-sm';
+    if (!message) {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+    }
+
+    el.classList.remove('hidden');
+    if (type === 'success') {
+        el.classList.add('border-emerald-200', 'bg-emerald-50', 'text-emerald-600');
+    } else if (type === 'error') {
+        el.classList.add('border-red-200', 'bg-red-50', 'text-red-600');
+    } else {
+        el.classList.add('border-af-border', 'bg-af-base', 'text-af-secondary');
+    }
+    el.innerHTML = message;
+}
+
+async function startTransformWebcam() {
+    try {
+        transformStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById('transformVideo').srcObject = transformStream;
+        document.getElementById('transformVideo').classList.remove('hidden');
+        document.getElementById('transformCameraPlaceholder').classList.add('hidden');
+        document.getElementById('transformWebcamPreview').classList.add('hidden');
+        document.getElementById('transformStart').classList.add('hidden');
+        document.getElementById('transformCapture').classList.remove('hidden');
+        document.getElementById('transformStop').classList.remove('hidden');
+        document.getElementById('transformRetake').classList.add('hidden');
+        setTransformStatus('', '');
+    } catch (error) {
+        setTransformStatus('error', '<i class="bi bi-exclamation-circle"></i> Camera access denied or unavailable.');
+    }
+}
+
+function stopTransformWebcam() {
+    if (transformStream) {
+        transformStream.getTracks().forEach(track => track.stop());
+        transformStream = null;
+    }
+    document.getElementById('transformVideo').classList.add('hidden');
+    document.getElementById('transformWebcamPreview').classList.add('hidden');
+    document.getElementById('transformCameraPlaceholder').classList.remove('hidden');
+    document.getElementById('transformStart').classList.remove('hidden');
+    document.getElementById('transformCapture').classList.add('hidden');
+    document.getElementById('transformRetake').classList.add('hidden');
+    document.getElementById('transformStop').classList.add('hidden');
+}
+
+function retakeTransformWebcam() {
+    document.getElementById('transformWebcamPreview').classList.add('hidden');
+    document.getElementById('transformVideo').classList.remove('hidden');
+    document.getElementById('transformCapture').classList.remove('hidden');
+    document.getElementById('transformRetake').classList.add('hidden');
+    setTransformStatus('', '');
+}
+
+async function captureTransformWebcam() {
+    const video = document.getElementById('transformVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg', 0.92);
+
+    const preview = document.getElementById('transformWebcamPreview');
+    preview.src = imageData;
+    preview.classList.remove('hidden');
+    video.classList.add('hidden');
+    document.getElementById('transformCapture').classList.add('hidden');
+    document.getElementById('transformRetake').classList.remove('hidden');
+    setTransformStatus('info', '<i class="bi bi-hourglass-split"></i> Transforming expression...');
+
+    try {
+        const response = await fetch("{{ url_for('mood.transform_webcam') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                image_data: imageData,
+                target_mood: selectedTransformMood
+            })
+        });
+        const result = await response.json();
+        showTransformWebcamResult(result, response.ok);
+        setTransformStatus(response.ok ? 'success' : 'error', response.ok
+            ? '<i class="bi bi-check-circle"></i> Transformation completed.'
+            : '<i class="bi bi-exclamation-circle"></i> ' + escapeTransformHtml(result.message || 'Transformation failed.'));
+    } catch (error) {
+        setTransformStatus('error', '<i class="bi bi-exclamation-circle"></i> Network error while transforming image.');
+    }
+}
+
+function showTransformWebcamResult(result, ok) {
+    const target = document.getElementById('transformResultContent');
+    if (ok && result.success) {
+        const timestamp = encodeURIComponent(result.timestamp || Date.now());
+        const originalImage = escapeTransformAttr(result.original_image || result.original_image_path);
+        const transformedImage = escapeTransformAttr(result.transformed_image || result.transformed_image_path);
+        target.innerHTML = `
+            <div class="space-y-4">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    <div class="overflow-hidden rounded-3xl border border-af-border bg-af-base">
+                        <div class="border-b border-af-border bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-af-muted">Original</div>
+                        <img src="/static/${originalImage}?v=${timestamp}" alt="Original face" class="h-80 w-full object-contain">
+                    </div>
+                    <div class="overflow-hidden rounded-3xl border border-rose-200 bg-rose-50">
+                        <div class="border-b border-rose-100 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-rose-600">Transformed</div>
+                        <img src="/static/${transformedImage}?v=${timestamp}" alt="Transformed face" class="h-80 w-full object-contain">
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold capitalize text-emerald-600">
+                    <i class="bi bi-check-circle"></i>
+                    Target mood: ${escapeTransformHtml(result.selected_mood || result.target_mood)}
+                </div>
+            </div>
+        `;
+    } else {
+        target.innerHTML = `
+            <div class="rounded-[26px] border border-red-200 bg-red-50 p-6 text-red-600">
+                <div class="mb-2 font-bold">Transformation failed</div>
+                <p class="m-0 text-sm leading-6">${escapeTransformHtml(result.message || 'Could not transform image.')}</p>
+            </div>
+        `;
+    }
+}
+
+function escapeTransformHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    }[char]));
+}
+
+function escapeTransformAttr(value) {
+    return encodeURI(String(value || '').replace(/^\/+/, ''));
+}
+
+setTargetMood(selectedTransformMood);
+</script>
+{% endblock %}

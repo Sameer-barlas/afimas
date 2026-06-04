@@ -81,6 +81,7 @@
             <div data-collapse-hide class="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-af-muted">Mood</div>
             {{ nav_item('mood.scan', 'bi-emoji-smile', 'Mood Scan') }}
             {{ nav_item('mood.history', 'bi-clock-history', 'Scan History') }}
+            {{ nav_item('mood.transform', 'bi-magic', 'Mood Transform Demo') }}
 
             <div data-collapse-hide class="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-af-muted">AI Tools</div>
             {{ nav_item('age.predict', 'bi-calendar-heart', 'Age Prediction') }}
@@ -88,16 +89,9 @@
             <div data-collapse-hide class="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-af-muted">Advanced Modules</div>
             <div class="space-y-1">
                 <div class="flex cursor-not-allowed items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-af-muted opacity-70">
-                    <i class="bi bi-hourglass-split w-5 shrink-0 text-center text-lg"></i>
-                    <span data-collapse-hide class="flex min-w-0 flex-1 items-center justify-between gap-2">
-                        <span class="truncate">Age Simulation</span>
-                        <i class="bi bi-lock-fill text-xs"></i>
-                    </span>
-                </div>
-                <div class="flex cursor-not-allowed items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-af-muted opacity-70">
                     <i class="bi bi-image w-5 shrink-0 text-center text-lg"></i>
                     <span data-collapse-hide class="flex min-w-0 flex-1 items-center justify-between gap-2">
-                        <span class="truncate">Mood Image Generation</span>
+                        <span class="truncate">Kaggle Mood Generation</span>
                         <i class="bi bi-lock-fill text-xs"></i>
                     </span>
                 </div>
@@ -148,6 +142,7 @@
                         <a href="{{ url_for('mood.scan') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Mood Scan</a>
                         <a href="{{ url_for('mood.history') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Mood History</a>
                         <a href="{{ url_for('age.predict') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Age Prediction</a>
+                        <a href="{{ url_for('mood.transform') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Mood Transform</a>
                         <a href="{{ url_for('auth.logout') }}" class="btn-af-secondary">Sign Out</a>
                     {% else %}
                         <a href="{{ url_for('auth.signup') }}" class="rounded-xl px-3 py-2 text-sm text-af-secondary no-underline transition hover:bg-af-accent/10 hover:text-af-accent">Create Account</a>

@@ -149,10 +149,10 @@
                     <h2 class="font-display text-2xl font-extrabold text-af-text">Core tools</h2>
                     <p class="mt-1 text-sm text-af-muted">Fast access to the routes already connected in your app.</p>
                 </div>
-                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">4 live</span>
+                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">5 live</span>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-5">
                 <a href="{{ url_for('face.register_face') }}" class="group rounded-3xl border border-af-border bg-gradient-to-br from-white to-af-base/70 p-5 no-underline transition hover:-translate-y-1 hover:border-af-border-accent hover:shadow-af-glow">
                     <div class="mb-5 grid h-13 w-13 place-items-center rounded-2xl bg-af-accent/10 text-2xl text-af-accent">
                         <i class="bi bi-person-bounding-box"></i>
@@ -194,9 +194,21 @@
                         <i class="bi bi-calendar-heart"></i>
                     </div>
                     <h3 class="font-display text-xl font-extrabold text-af-text">Age Prediction</h3>
-                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Estimate age from a face image and classify it as Child, Young, or Adult.</p>
+                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Run the pretrained DeepFace age model and classify the detected face.</p>
                     <div class="mt-5 flex items-center justify-between text-sm font-bold text-cyan-600">
                         <span>DeepFace powered</span>
+                        <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('mood.transform') }}" class="group rounded-3xl border border-af-border bg-gradient-to-br from-white to-cyan-50 p-5 no-underline transition hover:-translate-y-1 hover:border-cyan-200 hover:shadow-af-glow">
+                    <div class="mb-5 grid h-13 w-13 place-items-center rounded-2xl bg-cyan-500/10 text-2xl text-cyan-600">
+                        <i class="bi bi-magic"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-extrabold text-af-text">Mood Transform Demo</h3>
+                    <p class="mt-2 min-h-16 text-sm leading-6 text-af-secondary">Show the local OpenCV landmark-style expression transformation output.</p>
+                    <div class="mt-5 flex items-center justify-between text-sm font-bold text-cyan-600">
+                        <span>Demo module</span>
                         <i class="bi bi-arrow-right transition group-hover:translate-x-1"></i>
                     </div>
                 </a>
@@ -207,7 +219,7 @@
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <h2 class="font-display text-2xl font-extrabold">Roadmap</h2>
-                    <p class="mt-1 text-sm text-white/60">Upcoming AI modules</p>
+                    <p class="mt-1 text-sm text-white/60">External model work</p>
                 </div>
                 <div class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-xl">
                     <i class="bi bi-magic"></i>
@@ -216,8 +228,7 @@
 
             <div class="mt-6 space-y-3">
                 {% for icon, title, detail in [
-                    ('bi-hourglass-split', 'Age Simulation', 'Preview younger or older versions'),
-                    ('bi-image', 'Mood Image Generation', 'Generate expression-adjusted images')
+                    ('bi-image', 'Kaggle Mood Image Generation', 'Generate expression-adjusted images on Kaggle')
                 ] %}
                 <div class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
                     <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-af-accent-3">

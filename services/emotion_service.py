@@ -49,10 +49,10 @@ from config import Config
 # ─────────────────────────────────────────────
 try:
     detector = FER(mtcnn=False)  # Use False for faster, lighter detection
-    print("✅ FER emotion detector loaded.")
+    print("[emotion_service] FER emotion detector loaded.")
 except Exception as e:
     detector = None
-    print(f"❌ FER failed to load: {e}")
+    print(f"[emotion_service] FER failed to load: {e}")
 
 
 # ─────────────────────────────────────────────
